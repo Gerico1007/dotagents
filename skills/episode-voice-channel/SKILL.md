@@ -33,8 +33,19 @@ Then find or make the room:
 
 ```bash
 scripts/episode status                       # workspace, compositions, what is waiting
-scripts/episode open "Episode Title"         # prints the slug; safe to re-run
+scripts/episode new "Artifact Container"     # next numbered episode → ep-004-artifact-container
+scripts/episode open "Episode Title"         # find or create by exact title; safe to re-run
 ```
+
+Prefer `new` when a subject deserves its own room. It claims the next free
+number by scanning existing slugs, so episodes sort in the order they happened
+and can be named out loud without ambiguity — "episode four" is unambiguous in a
+way "the worktree one" is not. Use `open` when you are returning to a room you
+already know the title of.
+
+Start a new episode whenever the subject changes rather than letting one room
+accumulate everything. Jerry scrolls these later, and a room per subject is what
+makes that possible.
 
 ## Speaking to Jerry
 

@@ -206,6 +206,10 @@ if t.get("french"):  print("  [fr]", t["french"].strip())
 if t.get("english"): print("  [en]", t["english"].strip())'
 }
 
+# Filenames waiting on us: Jerry recorded them, we did not, and they are not
+# transcribed yet. Exposed so a watcher can poll the same filter the loop uses.
+cmd_pending() { list_new; }
+
 cmd_listen() {
   local mode="new" slug=""
   while [ $# -gt 0 ]; do
@@ -281,6 +285,7 @@ episode — two-way voice channel through a Pixel Recorder composition
   episode say --text "..." [--persona synth] [--to <slug>] [--label "..."]
   episode say --file msg.txt --to <slug>
   episode listen [--new|--latest|--all] [--to <slug>]
+  episode pending                          list filenames waiting on us (one per line)
   episode note <slug> --text "..." [--append]
 
 personas: nyro (en) · jamai (en) · synth (en) · aureon (fr) · salix (fr)
@@ -295,6 +300,7 @@ case "${1:-}" in
   new)       shift; cmd_new "$@" ;;
   say)       shift; cmd_say "$@" ;;
   listen)    shift; cmd_listen "$@" ;;
+  pending)   shift; cmd_pending ;;
   note)      shift; cmd_note "$@" ;;
   ""|-h|--help|help) usage ;;
   *) die "unknown command: $1 (try: episode help)" ;;
