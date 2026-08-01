@@ -133,6 +133,15 @@ that follows the active workspace, so a clip imported while the portal serves
 `episodes` sits beside Jerry's own takes for that workspace. Check with
 `episode status` before speaking if you are unsure which room you are in.
 
+## Standing watch
+
+If you are taking over the channel rather than answering once — polling for what
+Jerry records while he is out, and replying as things arrive — read
+`references/watcher-handoff.md`. It covers the poll loop, how to handle video
+prompts (which the pending filter does not catch), which episode to answer in,
+publishing a visual to his public domain, and the state that outlives your
+session.
+
 ## Configuration
 
 Defaults suit Eury. Override by environment when they do not:
