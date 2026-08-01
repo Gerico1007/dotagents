@@ -109,6 +109,26 @@ for c in json.load(sys.stdin):
   printf '%s\n' "$slug"
 }
 
+# -------------------------------------------------------------------- new
+# Episodes are numbered so they sort in the order they happened and can be said
+# aloud without ambiguity ("episode four"). The slug carries the number, since
+# the slug is what every API call and folder name uses.
+#   episode new "Artifact Container"  ->  ep-004-artifact-container
+cmd_new() {
+  local title="${1:-}"; [ -n "$title" ] || die "usage: episode new \"<Title>\""
+  local next
+  next="$("${CURL[@]}" "$PORTAL/api/compositions" | python3 -c '
+import json, re, sys
+n = 0
+for c in json.load(sys.stdin):
+    m = re.match(r"ep-(\d+)-", c.get("slug", ""))
+    if m:
+        n = max(n, int(m.group(1)))
+print("%03d" % (n + 1))')"
+  [ -n "$next" ] || die "could not determine next episode number"
+  cmd_open "ep-$next $title"
+}
+
 # -------------------------------------------------------------------- say
 cmd_say() {
   local persona="synth" text="" textfile="" slug="" label=""
@@ -256,6 +276,7 @@ episode — two-way voice channel through a Pixel Recorder composition
 
   episode preflight                        check portal, Groq key quoting, ffmpeg
   episode status                           workspace, compositions, what is waiting
+  episode new "<Title>"                    create the next numbered episode (ep-NNN-slug)
   episode open "<Title>"                   create (or find) a composition, print slug
   episode say --text "..." [--persona synth] [--to <slug>] [--label "..."]
   episode say --file msg.txt --to <slug>
@@ -271,6 +292,7 @@ case "${1:-}" in
   preflight) shift; cmd_preflight ;;
   status)    shift; cmd_status ;;
   open)      shift; cmd_open "$@" ;;
+  new)       shift; cmd_new "$@" ;;
   say)       shift; cmd_say "$@" ;;
   listen)    shift; cmd_listen "$@" ;;
   note)      shift; cmd_note "$@" ;;
