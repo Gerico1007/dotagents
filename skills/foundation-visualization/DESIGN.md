@@ -7,10 +7,11 @@ any `foundations/<topic>/` packet. It relates to `jgwill/Miadi#530`
 `jgwill/Miadi#529` (Atlas, the entity the constellation of foundations feeds).
 
 The deliverable is three files under
-`rispecs/skills/foundation-visualization/`:
+`skills/foundation-visualization/` in **jgwill/dotagents**:
 `SKILL.md` (the agent-facing contract), `template.html` (the parameterized,
-artifact-ready page), and this `DESIGN.md` (the rationale). The rispecs copy is
-the **spec / proposal**; the live install location is recommended below.
+artifact-ready page), and this `DESIGN.md` (the rationale). This repo is the
+source of truth (see Recommendation 2); a `rispecs/` copy, where one exists, is
+the **spec / proposal** and follows this one.
 
 ## The core tension it resolves
 
