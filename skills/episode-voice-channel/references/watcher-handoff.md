@@ -25,8 +25,17 @@ Until that changes, sweep the folder directly when he says he posted something
 and nothing arrived:
 
 ```bash
-find ~/Recordings-episodes -type f -newermt '-30 minutes' -printf '%TH:%TM %10s %p\n' | sort
+touch -d '30 minutes ago' /tmp/ref30
+find ~/Recordings-episodes -type f -newer /tmp/ref30 -printf '%TH:%TM %10s %p\n' | sort
 ```
+
+Use the reference-file form, not `-newermt '-30 minutes'`. On this host `find` is
+**bfs**, which rejects relative timestamps — and it fails in the worst possible
+way for a watcher: the error goes to stderr and the command yields no rows, so a
+sweep that is actually broken looks exactly like a sweep that found nothing. That
+mistake cost this session a wrong conclusion about whether a file had arrived.
+When a sweep returns empty, confirm the method works by checking it can still see
+a file you know exists.
 
 For a video prompt, the words are in the audio track. Pull it and send that:
 
