@@ -1,0 +1,307 @@
+#!/usr/bin/env bash
+# episode — two-way voice channel with Jerry through a Pixel Recorder composition.
+# Part of the episode-voice-channel skill. See ../SKILL.md.
+set -euo pipefail
+
+PORTAL="${PIXEL_RECORDER_URL:-https://localhost:8768}"
+VOICE_DIR="${ASSEMBLY_VOICE_DIR:-$HOME/salix/repos/assembly-voice}"
+STATE_DIR="${EPISODE_STATE_DIR:-$HOME/.local/state/episode-voice}"
+CURL=(curl -sk --max-time 240)
+
+die()  { printf '\033[31merror:\033[0m %s\n' "$*" >&2; exit 1; }
+info() { printf '\033[36m%s\033[0m\n' "$*" >&2; }
+ok()   { printf '\033[32m✓\033[0m %s\n' "$*" >&2; }
+
+# Which workspace the portal is serving right now. The recordings folder follows
+# it, so anything we import lands beside Jerry's own takes for that workspace.
+current_workspace() {
+  "${CURL[@]}" "$PORTAL/" 2>/dev/null \
+    | grep -o 'data-current-workspace="[^"]*"' | head -1 \
+    | sed 's/.*="//; s/"//' || true
+}
+
+ledger_file() {
+  local ws; ws="$(current_workspace)"; ws="${ws:-main}"
+  mkdir -p "$STATE_DIR"
+  printf '%s/spoken-%s.txt' "$STATE_DIR" "$ws"
+}
+
+# ---------------------------------------------------------------- preflight
+# Three failures cost a whole session to diagnose once. Checking them up front
+# turns each into one clear line instead of an opaque downstream error.
+cmd_preflight() {
+  local fail=0
+
+  if "${CURL[@]}" -o /dev/null -w '%{http_code}' "$PORTAL/" 2>/dev/null | grep -q '^200$'; then
+    ok "portal reachable at $PORTAL (workspace: $(current_workspace | sed 's/^$/main/'))"
+  else
+    printf '\033[31m✗\033[0m portal not answering at %s\n' "$PORTAL" >&2
+    printf '  start it:  cd <gmtermux>/web && setsid env WORKSPACE=episodes node pixel-recorder.js > /tmp/pr.log 2>&1 &\n' >&2
+    fail=1
+  fi
+
+  # A quoted value in ~/.env reaches Groq with the quote characters attached and
+  # comes back as invalid_api_key — the key itself looks fine, so this is easy to
+  # chase in the wrong direction.
+  if [ -f "$HOME/.env" ]; then
+    if grep -q '^GROQ_API_KEY=".*"' "$HOME/.env" 2>/dev/null; then
+      printf '\033[31m✗\033[0m GROQ_API_KEY in ~/.env is wrapped in quotes\n' >&2
+      printf '  the recorder .env parser does not strip them, so Groq receives Bearer "gsk_..."\n' >&2
+      printf '  fix:  sed -i \x27s/^GROQ_API_KEY="\\(.*\\)"$/GROQ_API_KEY=\\1/\x27 ~/.env   then restart the portal\n' >&2
+      fail=1
+    elif grep -q '^GROQ_API_KEY=' "$HOME/.env"; then
+      ok "GROQ_API_KEY present and unquoted"
+    else
+      printf '\033[33m!\033[0m no GROQ_API_KEY in ~/.env — speaking works, listening will not\n' >&2
+    fi
+  else
+    printf '\033[33m!\033[0m no ~/.env found\n' >&2
+  fi
+
+  command -v ffmpeg >/dev/null || { printf '\033[31m✗\033[0m ffmpeg missing (needed for mp3→m4a)\n' >&2; fail=1; }
+  [ -f "$VOICE_DIR/scripts/tts-generate.py" ] || { printf '\033[31m✗\033[0m assembly-voice not at %s\n' "$VOICE_DIR" >&2; fail=1; }
+  [ "$fail" -eq 0 ] && ok "ready" || true
+  return "$fail"
+}
+
+cmd_status() {
+  printf 'portal:     %s\n' "$PORTAL"
+  printf 'workspace:  %s\n' "$(current_workspace | sed 's/^$/main/')"
+  printf 'ledger:     %s\n' "$(ledger_file)"
+  printf '\ncompositions:\n'
+  "${CURL[@]}" "$PORTAL/api/compositions" | python3 -c '
+import json, sys
+rows = json.load(sys.stdin)
+if not rows:
+    print("  (none)")
+for c in rows:
+    slug  = c.get("slug", "?")
+    clips = c.get("clipCount", len(c.get("clips", [])))
+    print("  %-36s %2d clips  %s" % (slug, clips, c.get("title", "")))' 2>/dev/null || echo "  (none)"
+  printf '\nuntranscribed recordings (excluding my own voice):\n'
+  list_new | sed 's/^/  /' || echo "  (none)"
+}
+
+# ------------------------------------------------------------------- open
+cmd_open() {
+  local title="${1:-}"; [ -n "$title" ] || die "usage: episode open \"<Title>\""
+  local out; out="$("${CURL[@]}" -X POST "$PORTAL/api/compositions" \
+    -H 'Content-Type: application/json' \
+    -d "$(python3 -c 'import json,sys; print(json.dumps({"title": sys.argv[1]}))' "$title")")"
+  local slug
+  slug="$(printf '%s' "$out" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+print(d.get("composition",{}).get("slug","") if d.get("success") else "")' 2>/dev/null || true)"
+
+  if [ -z "$slug" ]; then
+    # Already exists is the common case on a second call — resolve the slug so
+    # this stays safe to run repeatedly.
+    slug="$("${CURL[@]}" "$PORTAL/api/compositions" | python3 -c '
+import json,sys
+t=sys.argv[1].lower()
+for c in json.load(sys.stdin):
+    if c.get("title","").lower()==t: print(c["slug"]); break' "$title" 2>/dev/null || true)"
+    [ -n "$slug" ] || die "could not create or find composition: $title"
+    info "composition already exists"
+  fi
+  ok "composition: $slug"
+  printf '%s\n' "$slug"
+}
+
+# -------------------------------------------------------------------- new
+# Episodes are numbered so they sort in the order they happened and can be said
+# aloud without ambiguity ("episode four"). The slug carries the number, since
+# the slug is what every API call and folder name uses.
+#   episode new "Artifact Container"  ->  ep-004-artifact-container
+cmd_new() {
+  local title="${1:-}"; [ -n "$title" ] || die "usage: episode new \"<Title>\""
+  local next
+  next="$("${CURL[@]}" "$PORTAL/api/compositions" | python3 -c '
+import json, re, sys
+n = 0
+for c in json.load(sys.stdin):
+    m = re.match(r"ep-(\d+)-", c.get("slug", ""))
+    if m:
+        n = max(n, int(m.group(1)))
+print("%03d" % (n + 1))')"
+  [ -n "$next" ] || die "could not determine next episode number"
+  cmd_open "ep-$next $title"
+}
+
+# -------------------------------------------------------------------- say
+cmd_say() {
+  local persona="synth" text="" textfile="" slug="" label=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --persona) persona="$2"; shift 2 ;;
+      --text)    text="$2";    shift 2 ;;
+      --file)    textfile="$2";shift 2 ;;
+      --to)      slug="$2";    shift 2 ;;
+      --label)   label="$2";   shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  [ -n "$textfile" ] && text="$(cat "$textfile")"
+  [ -n "$text" ] || die "usage: episode say --text \"...\" [--persona synth] [--to <slug>]"
+
+  cmd_preflight >/dev/null 2>&1 || { cmd_preflight; die "preflight failed"; }
+
+  info "generating speech (persona: $persona)…"
+  local mp3
+  mp3="$(cd "$VOICE_DIR" && python3 scripts/tts-generate.py --persona "$persona" --text "$text" \
+        | grep -o 'audio=[^ ]*' | head -1 | cut -d= -f2-)"
+  [ -n "$mp3" ] && [ -f "$mp3" ] || die "TTS produced no audio"
+
+  # The recorder's AUDIO_EXTENSIONS list has no .mp3, so an import of the raw
+  # TTS output is rejected. AAC in an .m4a container is what it already stores.
+  local m4a; m4a="${TMPDIR:-/tmp}/episode-$(date +%s).m4a"
+  ffmpeg -y -loglevel error -i "$mp3" -c:a aac -b:a 128k "$m4a"
+
+  info "importing into $(current_workspace | sed 's/^$/main/')…"
+  local filename
+  filename="$("${CURL[@]}" -X POST "$PORTAL/import" -F "audioFile=@$m4a" \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin).get("filename",""))')"
+  [ -n "$filename" ] || die "import failed"
+  rm -f "$m4a"
+
+  # Remember what we said, so `listen` never transcribes our own voice back.
+  printf '%s\n' "$filename" >> "$(ledger_file)"
+
+  if [ -n "$slug" ]; then
+    [ -n "$label" ] || label="🔊 ${persona} — $(date '+%H:%M')"
+    "${CURL[@]}" -X POST "$PORTAL/api/compositions/$slug/clips" \
+      -H 'Content-Type: application/json' \
+      -d "$(python3 -c 'import json,sys; print(json.dumps({"filename":sys.argv[1],"label":sys.argv[2]}))' "$filename" "$label")" >/dev/null
+    ok "spoke into $slug as $filename"
+  else
+    ok "spoke as $filename (not attached — pass --to <slug> to place it in an episode)"
+  fi
+  printf '%s\n' "$filename"
+}
+
+# ----------------------------------------------------------------- listen
+# Recordings Jerry made: no transcription yet, and not something we spoke.
+list_new() {
+  local ledger; ledger="$(ledger_file)"; touch "$ledger"
+  "${CURL[@]}" "$PORTAL/recordings" | python3 -c '
+import json,sys
+spoken={l.strip() for l in open(sys.argv[1]) if l.strip()}
+for r in json.load(sys.stdin):
+    if r.get("hasTranscription"): continue
+    if r.get("isMidi") or r.get("isVideo"): continue
+    if r["filename"] in spoken: continue
+    print(r["filename"])' "$ledger"
+}
+
+transcribe_one() {
+  local f="$1"
+  "${CURL[@]}" -X POST "$PORTAL/transcribe/$f" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+if not d.get("success"):
+    print("  ERROR:", d.get("error","unknown")); sys.exit(1)
+t=d.get("transcription",{})
+if t.get("french"):  print("  [fr]", t["french"].strip())
+if t.get("english"): print("  [en]", t["english"].strip())'
+}
+
+# Filenames waiting on us: Jerry recorded them, we did not, and they are not
+# transcribed yet. Exposed so a watcher can poll the same filter the loop uses.
+cmd_pending() { list_new; }
+
+cmd_listen() {
+  local mode="new" slug=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --new)    mode="new";    shift ;;
+      --latest) mode="latest"; shift ;;
+      --all)    mode="all";    shift ;;
+      --to)     slug="$2";     shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+
+  local files
+  case "$mode" in
+    new)    files="$(list_new)" ;;
+    latest) files="$(list_new | tail -1)" ;;
+    all)    files="$("${CURL[@]}" "$PORTAL/recordings" | python3 -c '
+import json,sys
+for r in json.load(sys.stdin):
+    if not (r.get("isMidi") or r.get("isVideo")): print(r["filename"])')" ;;
+  esac
+
+  [ -n "$files" ] || { info "nothing new from Jerry"; return 0; }
+
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    printf '\n\033[35m▶ %s\033[0m\n' "$f"
+    transcribe_one "$f" || true
+    if [ -n "$slug" ]; then
+      "${CURL[@]}" -X POST "$PORTAL/api/compositions/$slug/clips" \
+        -H 'Content-Type: application/json' \
+        -d "$(python3 -c 'import json,sys; print(json.dumps({"filename":sys.argv[1],"label":"Jerry — "+sys.argv[1]+" (transcribed)"}))' "$f")" >/dev/null || true
+    fi
+  done <<< "$files"
+}
+
+# ------------------------------------------------------------------- note
+cmd_note() {
+  local slug="${1:-}"; shift || true
+  local text="" append=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --text)   text="$2"; shift 2 ;;
+      --file)   text="$(cat "$2")"; shift 2 ;;
+      --append) append=1; shift ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  [ -n "$slug" ] && [ -n "$text" ] || die "usage: episode note <slug> --text \"...\" [--append]"
+
+  if [ "$append" -eq 1 ]; then
+    local existing
+    existing="$("${CURL[@]}" "$PORTAL/api/compositions/$slug" \
+      | python3 -c 'import json,sys; print(json.load(sys.stdin).get("notes",""))')"
+    text="$existing
+
+$text"
+  fi
+  "${CURL[@]}" -X PUT "$PORTAL/api/compositions/$slug" \
+    -H 'Content-Type: application/json' \
+    -d "$(python3 -c 'import json,sys; print(json.dumps({"notes":sys.argv[1]}))' "$text")" >/dev/null
+  ok "notes updated on $slug"
+}
+
+usage() {
+  cat >&2 <<'USAGE'
+episode — two-way voice channel through a Pixel Recorder composition
+
+  episode preflight                        check portal, Groq key quoting, ffmpeg
+  episode status                           workspace, compositions, what is waiting
+  episode new "<Title>"                    create the next numbered episode (ep-NNN-slug)
+  episode open "<Title>"                   create (or find) a composition, print slug
+  episode say --text "..." [--persona synth] [--to <slug>] [--label "..."]
+  episode say --file msg.txt --to <slug>
+  episode listen [--new|--latest|--all] [--to <slug>]
+  episode pending                          list filenames waiting on us (one per line)
+  episode note <slug> --text "..." [--append]
+
+personas: nyro (en) · jamai (en) · synth (en) · aureon (fr) · salix (fr)
+env: PIXEL_RECORDER_URL, ASSEMBLY_VOICE_DIR, EPISODE_STATE_DIR
+USAGE
+}
+
+case "${1:-}" in
+  preflight) shift; cmd_preflight ;;
+  status)    shift; cmd_status ;;
+  open)      shift; cmd_open "$@" ;;
+  new)       shift; cmd_new "$@" ;;
+  say)       shift; cmd_say "$@" ;;
+  listen)    shift; cmd_listen "$@" ;;
+  pending)   shift; cmd_pending ;;
+  note)      shift; cmd_note "$@" ;;
+  ""|-h|--help|help) usage ;;
+  *) die "unknown command: $1 (try: episode help)" ;;
+esac
