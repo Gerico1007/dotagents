@@ -62,6 +62,14 @@ is no source. **Always transcribe your own spoken clips here.** Audio is for
 walking; the page is for reading afterwards, and a clip with no transcript is
 unsearchable.
 
+**The sidecar `.txt` files collide, and that is fine.** Each text also lands on
+disk as `transcription_<yyyymmddHHMMSS>_<LANG>.txt`. The stamp resolves to the
+second, so several texts of the same language posted in one loop all claim the
+same filename and the last one wins — six posts produced two files here. Nothing
+is lost: every entry carries its own `content` inside `composition.json`, and
+that is what the page renders. Treat `composition.json` as the store and the
+sidecar files as a lossy export. Do not read a text back from its `filename`.
+
 ## Video — score and sound in one object
 
 The importer accepts `.mp4`, `.webm`, `.mov` up to 500 MB, and the page mounts a
