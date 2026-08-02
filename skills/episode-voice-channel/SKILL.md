@@ -95,13 +95,29 @@ This is where exact strings belong. Saying a shell command aloud is useless; he
 needs to be able to copy it when he is back at the machine.
 
 But `notes` is **not** the only place, and it is the wrong place for most of it.
-This script reaches one field; the server renders three more sections that
-nothing announces — **Images**, **Textes** (transcripts, with a copy button and
-a language badge) and **video clips** that play in the page. Left unused, `notes`
-swells into an unreadable block. Before writing anything long, read
-`references/composition-sections.md`: it says which section each thing belongs
-in, how to post to each one, how to turn a score into an image and a score plus
-its audio into one playable video, and why you commit before rewriting a source.
+The page renders three more sections — **Images**, **Textes** (transcripts, with
+a copy button and a language badge) and **video clips** that play inline. Each
+has its own verb:
+
+```bash
+scripts/episode text  "$SLUG" --file measurements.md --lang fr --label "Mesures" --source 260802123647.m4a
+scripts/episode image "$SLUG" --file score.svg --label "🎼 Partition v2"   # svg is rasterised for you
+scripts/episode video "$SLUG" --image score.svg --audio piece.mp3          # score + sound, one object
+```
+
+**The dividing line**: `notes` is orientation — what, why, what next, under a
+thousand characters. Everything that is *evidence* goes in a section. A public
+URL or a shell command inside `notes` cannot be copied cleanly; inside a text
+entry it can, which is the whole reason that section exists.
+
+Always put the exact wording of your own spoken clips in `text` with `--source`
+pointing at the clip. A clip with no transcript is unsearchable, and Whisper
+will not give you back what you already know verbatim.
+
+`references/composition-sections.md` carries the rest: label clips by the role
+they played rather than their date, why `PUT` silently ignores `clips`, and why
+you never republish a source without first attaching the outgoing version's
+rendering — that rendering is its last backup.
 
 ## A full exchange
 

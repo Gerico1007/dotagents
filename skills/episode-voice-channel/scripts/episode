@@ -274,6 +274,171 @@ $text"
   ok "notes updated on $slug"
 }
 
+# The portal answers 200 with an {"error": …} body in several places, so the
+# status code alone is not enough to know whether anything happened.
+api_check() {
+  local out="$1" what="$2"
+  printf '%s' "$out" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+if isinstance(d, dict) and (d.get("error") or d.get("success") is False):
+    print(d.get("error", "unknown error"), file=sys.stderr)
+    sys.exit(1)
+' || die "$what failed: $(printf '%s' "$out" | head -c 200)"
+}
+
+# ------------------------------------------------------------------- text
+# The page renders each entry with a language badge, your label, the clip it came
+# from, and a copy button. That button is the whole point: a URL or a command
+# buried in `notes` cannot be lifted out cleanly, and one sitting here can.
+# Put evidence here — transcripts, measurement tables, links — and leave `notes`
+# for what, why, and what next.
+cmd_text() {
+  local slug="${1:-}"; shift || true
+  local text="" lang="fr" label="" source=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --text)   text="$2";           shift 2 ;;
+      --file)   text="$(cat "$2")";  shift 2 ;;
+      --lang)   lang="$2";           shift 2 ;;
+      --label)  label="$2";          shift 2 ;;
+      --source) source="$2";         shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  [ -n "$slug" ] && [ -n "$text" ] \
+    || die "usage: episode text <slug> --file f.md [--lang fr|en] [--label \"...\"] [--source CLIP]"
+
+  local out
+  out="$("${CURL[@]}" -X POST "$PORTAL/api/compositions/$slug/texts" \
+    -H 'Content-Type: application/json' \
+    -d "$(python3 -c 'import json,sys; print(json.dumps({"text":sys.argv[1],"lang":sys.argv[2],"label":sys.argv[3],"sourceFilename":sys.argv[4]}))' \
+          "$text" "$lang" "$label" "$source")")"
+  api_check "$out" "text"
+  ok "text added to $slug ($lang${label:+, $label})"
+}
+
+# ------------------------------------------------------------------ image
+# An SVG is accepted and rasterised on the way in, because the portal only takes
+# jpg/jpeg/png/webp — and because looking at the PNG is the only way to find out
+# whether the staves collapsed or the beams broke. Reading the source will not
+# tell you.
+cmd_image() {
+  local slug="${1:-}"; shift || true
+  local file="" label="" width=1400
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --file)  file="$2";  shift 2 ;;
+      --label) label="$2"; shift 2 ;;
+      --width) width="$2"; shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  [ -n "$slug" ] && [ -n "$file" ] \
+    || die "usage: episode image <slug> --file picture.png|score.svg [--label \"...\"] [--width 1400]"
+  [ -f "$file" ] || die "no such file: $file"
+
+  local send="$file" tmp=""
+  case "$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')" in
+    *.svg)
+      command -v rsvg-convert >/dev/null || die "rsvg-convert missing (needed to turn $file into a PNG)"
+      tmp="${TMPDIR:-/tmp}/episode-img-$(date +%s).png"
+      rsvg-convert -w "$width" -b white "$file" -o "$tmp"
+      send="$tmp"
+      info "rasterised $(basename "$file") → PNG at ${width}px"
+      ;;
+    *.png|*.jpg|*.jpeg|*.webp) ;;
+    *) die "images must be png, jpg, jpeg, webp — or an svg to rasterise (got: $file)" ;;
+  esac
+
+  local out
+  out="$("${CURL[@]}" -X POST "$PORTAL/api/compositions/$slug/images" \
+    -F "imageFile=@$send" -F "label=$label")"
+  [ -n "$tmp" ] && rm -f "$tmp"
+  api_check "$out" "image"
+  ok "image added to $slug"
+}
+
+# ------------------------------------------------------------------ video
+# Score and sound as one object that plays in the page. Two modes: hand it a
+# finished video, or hand it a picture and an audio file and let it build one.
+#   episode video <slug> --file clip.mp4
+#   episode video <slug> --image score.svg --audio piece.mp3
+# No ledger entry is needed — `listen` already skips anything flagged isVideo.
+cmd_video() {
+  local slug="${1:-}"; shift || true
+  local file="" image="" audio="" label="" width=1400
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --file)  file="$2";  shift 2 ;;
+      --image) image="$2"; shift 2 ;;
+      --audio) audio="$2"; shift 2 ;;
+      --label) label="$2"; shift 2 ;;
+      --width) width="$2"; shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  [ -n "$slug" ] || die "usage: episode video <slug> --file clip.mp4 | --image score.svg --audio piece.mp3"
+
+  local built=""
+  if [ -z "$file" ]; then
+    [ -n "$image" ] && [ -n "$audio" ] \
+      || die "give either --file clip.mp4, or both --image and --audio"
+    [ -f "$image" ] || die "no such file: $image"
+    [ -f "$audio" ] || die "no such file: $audio"
+    command -v ffmpeg >/dev/null || die "ffmpeg missing"
+
+    local still="$image" tmp_png=""
+    case "$(printf '%s' "$image" | tr '[:upper:]' '[:lower:]')" in
+      *.svg)
+        command -v rsvg-convert >/dev/null || die "rsvg-convert missing (needed for $image)"
+        tmp_png="${TMPDIR:-/tmp}/episode-still-$(date +%s).png"
+        rsvg-convert -w "$width" -b white "$image" -o "$tmp_png"
+        still="$tmp_png"
+        ;;
+    esac
+
+    built="${TMPDIR:-/tmp}/episode-video-$(date +%s).mp4"
+    info "building video from $(basename "$image") + $(basename "$audio")…"
+    # -shortest stops at the audio. The pad filter is not cosmetic: h264 refuses
+    # odd pixel dimensions, and a rasterised score lands on an odd height often.
+    ffmpeg -y -loglevel error -loop 1 -i "$still" -i "$audio" \
+      -c:v libx264 -tune stillimage -preset medium -crf 20 -pix_fmt yuv420p \
+      -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2:color=white" \
+      -c:a aac -b:a 192k -shortest "$built" \
+      || die "ffmpeg failed to build the video"
+    [ -n "$tmp_png" ] && rm -f "$tmp_png"
+    file="$built"
+  fi
+
+  [ -f "$file" ] || die "no such file: $file"
+  case "$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')" in
+    *.mp4|*.webm|*.mov) ;;
+    *) die "video must be mp4, webm or mov (got: $file)" ;;
+  esac
+
+  info "importing into $(current_workspace | sed 's/^$/main/')…"
+  # The import field really is called audioFile for video too.
+  local filename
+  filename="$("${CURL[@]}" -X POST "$PORTAL/import" -F "audioFile=@$file" \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin).get("filename",""))')"
+  [ -n "$built" ] && rm -f "$built"
+  [ -n "$filename" ] || die "import failed"
+
+  [ -n "$label" ] || label="🎬 video — $(date '+%H:%M')"
+  local out
+  out="$("${CURL[@]}" -X POST "$PORTAL/api/compositions/$slug/clips" \
+    -H 'Content-Type: application/json' \
+    -d "$(python3 -c 'import json,sys; print(json.dumps({"filename":sys.argv[1],"label":sys.argv[2]}))' \
+          "$filename" "$label")")"
+  api_check "$out" "clip"
+  ok "video attached to $slug as $filename"
+  printf '%s\n' "$filename"
+}
+
 usage() {
   cat >&2 <<'USAGE'
 episode — two-way voice channel through a Pixel Recorder composition
@@ -286,7 +451,14 @@ episode — two-way voice channel through a Pixel Recorder composition
   episode say --file msg.txt --to <slug>
   episode listen [--new|--latest|--all] [--to <slug>]
   episode pending                          list filenames waiting on us (one per line)
-  episode note <slug> --text "..." [--append]
+  episode note <slug> --text "..." [--append]        what / why / what next only
+  episode text <slug> --file f.md [--lang fr|en] [--label "..."] [--source CLIP]
+  episode image <slug> --file pic.png|score.svg [--label "..."] [--width 1400]
+  episode video <slug> --file clip.mp4
+  episode video <slug> --image score.svg --audio piece.mp3 [--label "..."]
+
+sections: notes is orientation; evidence goes in text, image or video
+          (see references/composition-sections.md)
 
 personas: nyro (en) · jamai (en) · synth (en) · aureon (fr) · salix (fr)
 env: PIXEL_RECORDER_URL, ASSEMBLY_VOICE_DIR, EPISODE_STATE_DIR
@@ -302,6 +474,9 @@ case "${1:-}" in
   listen)    shift; cmd_listen "$@" ;;
   pending)   shift; cmd_pending ;;
   note)      shift; cmd_note "$@" ;;
+  text)      shift; cmd_text "$@" ;;
+  image)     shift; cmd_image "$@" ;;
+  video)     shift; cmd_video "$@" ;;
   ""|-h|--help|help) usage ;;
   *) die "unknown command: $1 (try: episode help)" ;;
 esac
