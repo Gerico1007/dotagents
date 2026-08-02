@@ -94,6 +94,15 @@ scripts/episode note worktree-territory-map --append --file findings.md
 This is where exact strings belong. Saying a shell command aloud is useless; he
 needs to be able to copy it when he is back at the machine.
 
+But `notes` is **not** the only place, and it is the wrong place for most of it.
+This script reaches one field; the server renders three more sections that
+nothing announces — **Images**, **Textes** (transcripts, with a copy button and
+a language badge) and **video clips** that play in the page. Left unused, `notes`
+swells into an unreadable block. Before writing anything long, read
+`references/composition-sections.md`: it says which section each thing belongs
+in, how to post to each one, how to turn a score into an image and a score plus
+its audio into one playable video, and why you commit before rewriting a source.
+
 ## A full exchange
 
 ```bash
@@ -132,6 +141,19 @@ is the **Import** button; recording happens on an Android node.
 that follows the active workspace, so a clip imported while the portal serves
 `episodes` sits beside Jerry's own takes for that workspace. Check with
 `episode status` before speaking if you are unsure which room you are in.
+
+## Making music instead of talking about work
+
+When the subject is Jerry's compositions rather than his repositories, read
+`references/jamai-compositions-mode.md`. The transport is unchanged — the same
+`say`, `listen` and `note` — but the recorder points at a different **atelier**
+(`jamai` rather than `episodes`), the material lands beside his melodies, and
+there is tooling and a leitmotif library you should not reinvent.
+
+That file also settles a naming collision worth keeping straight: the recorder's
+`WORKSPACE` is an **atelier** (a folder pair), while a herdr **espace de travail**
+is tabs and panes. Both get called "workspace" in passing and they are not the
+same thing.
 
 ## Standing watch
 
