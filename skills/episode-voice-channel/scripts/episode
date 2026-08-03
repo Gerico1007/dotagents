@@ -129,6 +129,26 @@ print("%03d" % (n + 1))')"
   cmd_open "ep-$next $title"
 }
 
+# ------------------------------------------------------------------- opus
+# Music compositions are numbered like episodes, with their own prefix, so the
+# two never collide in one atelier and both sort by when they happened.
+# "opus trois" is as unambiguous out loud as "episode four".
+#   episode opus "Boucle de minuit"  ->  op-003-boucle-de-minuit
+cmd_opus() {
+  local title="${1:-}"; [ -n "$title" ] || die "usage: episode opus \"<Title>\""
+  local next
+  next="$("${CURL[@]}" "$PORTAL/api/compositions" | python3 -c '
+import json, re, sys
+n = 0
+for c in json.load(sys.stdin):
+    m = re.match(r"op-(\d+)-", c.get("slug", ""))
+    if m:
+        n = max(n, int(m.group(1)))
+print("%03d" % (n + 1))')"
+  [ -n "$next" ] || die "could not determine next opus number"
+  cmd_open "op-$next $title"
+}
+
 # -------------------------------------------------------------------- say
 cmd_say() {
   local persona="synth" text="" textfile="" slug="" label=""
@@ -439,6 +459,93 @@ cmd_video() {
   printf '%s\n' "$filename"
 }
 
+# ------------------------------------------------------------------ watch
+# Answers "has anything moved?" in fourteen bytes when the answer is no, and
+# slows itself down when nothing keeps moving. Implements Gerico1007/dotagents#5,
+# written after a watch loop spent eleven hours re-reading whole directory
+# listings into context: 38 rounds, 27 of them byte-identical to the one before.
+#
+# The state lives on disk, not in the agent's head — an agent that is compacted
+# or replaced picks the loop up exactly where it was.
+watch_dirs() {                       # the two folders an atelier writes into
+  local ws="$1"
+  if [ "$ws" = "main" ] || [ -z "$ws" ]; then
+    printf '%s\n%s\n' "$HOME/compositions" "$HOME/Recordings"
+  else
+    printf '%s\n%s\n' "$HOME/compositions-$ws" "$HOME/Recordings-$ws"
+  fi
+}
+
+fingerprint() {                      # a repo needs two values; a plain dir needs mtimes
+  local d
+  while read -r d; do
+    [ -d "$d" ] || continue
+    if [ -d "$d/.git" ]; then
+      git -C "$d" rev-parse HEAD 2>/dev/null
+      git -C "$d" status --porcelain 2>/dev/null
+    else
+      find "$d" -maxdepth 2 -type f -printf '%T@ %s %p\n' 2>/dev/null | sort
+    fi
+  done
+}
+
+cmd_watch() {
+  local ws="" show_interval=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --interval) show_interval=1; shift ;;
+      --*) die "unknown option: $1" ;;
+      *) ws="$1"; shift ;;
+    esac
+  done
+  [ -n "$ws" ] || { ws="$(current_workspace)"; ws="${ws:-main}"; }
+  mkdir -p "$STATE_DIR"
+  local shafile="$STATE_DIR/watch-$ws.sha" delayfile="$STATE_DIR/watch-$ws.delay"
+
+  local delay; delay="$(cat "$delayfile" 2>/dev/null || echo 300)"
+  if [ "$show_interval" -eq 1 ]; then printf '%s\n' "$delay"; return 0; fi
+
+  local snap now old
+  snap="$(watch_dirs "$ws" | fingerprint)"
+  now="$(printf '%s' "$snap" | sha256sum | cut -c1-6)"
+  old="$(cat "$shafile" 2>/dev/null || true)"
+
+  if [ "$now" = "$old" ]; then
+    # ×2 up to an hour. Nothing moved, so ask less often.
+    delay=$(( delay * 2 )); [ "$delay" -gt 3600 ] && delay=3600
+    printf '%s\n' "$delay" > "$delayfile"
+    printf 'unchanged %s\n' "$now"
+    return 0
+  fi
+
+  # Changed. Say only WHAT changed — never the whole inventory again.
+  local d
+  while read -r d; do
+    [ -d "$d" ] || continue
+    if [ -d "$d/.git" ]; then
+      local head prev
+      head="$(git -C "$d" rev-parse --short HEAD 2>/dev/null || true)"
+      prev="$(cat "$STATE_DIR/watch-$ws.head" 2>/dev/null || true)"
+      if [ -n "$prev" ] && [ "$prev" != "$head" ]; then
+        git -C "$d" log --oneline "$prev..HEAD" 2>/dev/null | sed 's/^/  commit /'
+      fi
+      printf '%s\n' "$head" > "$STATE_DIR/watch-$ws.head"
+      git -C "$d" status --porcelain 2>/dev/null | sed 's/^/  worktree /'
+    else
+      # only files newer than the previous round's marker
+      if [ -f "$shafile" ]; then
+        find "$d" -maxdepth 2 -type f -newer "$shafile" -printf '  new %p\n' 2>/dev/null
+      else
+        find "$d" -maxdepth 2 -type f -printf '  seen %p\n' 2>/dev/null | head -20
+      fi
+    fi
+  done < <(watch_dirs "$ws")
+
+  printf '%s' "$now" > "$shafile"
+  printf '300\n' > "$delayfile"      # something moved: look again soon
+  printf 'changed %s\n' "$now"
+}
+
 usage() {
   cat >&2 <<'USAGE'
 episode — two-way voice channel through a Pixel Recorder composition
@@ -446,11 +553,13 @@ episode — two-way voice channel through a Pixel Recorder composition
   episode preflight                        check portal, Groq key quoting, ffmpeg
   episode status                           workspace, compositions, what is waiting
   episode new "<Title>"                    create the next numbered episode (ep-NNN-slug)
+  episode opus "<Title>"                   create the next numbered composition (op-NNN-slug)
   episode open "<Title>"                   create (or find) a composition, print slug
   episode say --text "..." [--persona synth] [--to <slug>] [--label "..."]
   episode say --file msg.txt --to <slug>
   episode listen [--new|--latest|--all] [--to <slug>]
   episode pending                          list filenames waiting on us (one per line)
+  episode watch [<atelier>] [--interval]   has anything moved? fingerprint + backoff
   episode note <slug> --text "..." [--append]        what / why / what next only
   episode text <slug> --file f.md [--lang fr|en] [--label "..."] [--source CLIP]
   episode image <slug> --file pic.png|score.svg [--label "..."] [--width 1400]
@@ -470,9 +579,11 @@ case "${1:-}" in
   status)    shift; cmd_status ;;
   open)      shift; cmd_open "$@" ;;
   new)       shift; cmd_new "$@" ;;
+  opus)      shift; cmd_opus "$@" ;;
   say)       shift; cmd_say "$@" ;;
   listen)    shift; cmd_listen "$@" ;;
   pending)   shift; cmd_pending ;;
+  watch)     shift; cmd_watch "$@" ;;
   note)      shift; cmd_note "$@" ;;
   text)      shift; cmd_text "$@" ;;
   image)     shift; cmd_image "$@" ;;
