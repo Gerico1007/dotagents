@@ -80,6 +80,28 @@ And when measurement narrows the field but does not decide, **say that you chose
 A confident sentence covering an unverified claim is the most expensive thing you
 can leave behind, because the next reader cannot tell it from a measured one.
 
+## Never name a chord by eye
+
+```bash
+python3 ~/.agents/skills/jamai-morning/scripts/jamai-chords.py source.mid 4
+```
+
+It prints the chord sounding on **every beat**, marks where it changes, and ends
+with the exact list of symbols to place and where. Run it on Jerry's MIDI before
+writing a single symbol, then run it again on your rendered ABC and compare: same
+labels at the same beats, or **the score is lying to whoever reads it**.
+
+This exists because a chord symbol written once over a bar claims that chord holds
+for the whole bar, and his playing changes inside the bar more often than not. On
+opus 001 a single `Gadd9` covered four beats; the ninth sounded on exactly one of
+them and the other three were `Gsus2`. Every individual symbol was defensible —
+the span was not. He caught it by ear before the tool existed.
+
+Two tolerances in that script were each paid for once, and both are in its
+comments: `abc2midi` staggers a chord's notes by ~0.021 beat each, so a
+four-note chord spans 0.065 and a narrow window silently drops its last note;
+and a note ending exactly on the beat belongs to the previous chord.
+
 ## Look at the score. Actually look at it.
 
 ```bash
