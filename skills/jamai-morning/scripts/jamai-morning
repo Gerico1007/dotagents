@@ -168,9 +168,14 @@ signal. Committe avant chaque réécriture.
 EOF
 } > "$BRIEF"
 
-touch "$MARK"
-
 # ── 6. Go ───────────────────────────────────────────────────────────────────
+# The marker is NOT advanced here. A --dry-run must consume no state: it is the
+# command you run to ask "what is waiting?", and if asking the question erased
+# the answer, the next real launch would report nothing new and the session
+# would start blind to what Jerry played overnight. That is exactly what
+# happened on 2026-08-03 — see ../references/lecons-260802.md.
+# The marker moves only when a real session is about to open and actually see
+# these files. It is set just before exec, below.
 printf '\n' >&2
 if [ -z "$NEW" ]; then warn "rien de neuf déposé dans $REC"
 else ok "$N_MIDI MIDI et $N_AUD audio déposés depuis la dernière session"; fi
@@ -184,5 +189,6 @@ if [ "$DRY" -eq 1 ]; then
 fi
 
 command -v claude >/dev/null || die "la commande \`claude\` est introuvable dans le PATH"
+touch "$MARK"          # a real session is opening and will see these files
 say "ouverture de la session…"
 exec claude "$(cat "$BRIEF")"
