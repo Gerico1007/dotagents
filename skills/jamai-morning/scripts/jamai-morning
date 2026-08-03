@@ -15,18 +15,23 @@ ATELIER=jamai
 PORTS="${JAMAI_RECORDER_PORTS:-8768 8778}"
 CURL=(curl -sk --max-time 15)
 
-DRY=0; TITLE=""
+DRY=0; TITLE=""; SINCE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1; shift ;;
     --title)   TITLE="$2"; shift 2 ;;
+    --since)   SINCE="$2"; shift 2 ;;
     -h|--help)
       cat >&2 <<'U'
 jamai-morning — open a music session in the jamai atelier
 
   jamai-morning                    find the atelier, report what is new, launch
   jamai-morning --title "Nom"      name the piece yourself instead of op-NNN
+  jamai-morning --since 2026-08-01 only drops from that date onward
   jamai-morning --dry-run          print the brief and stop; launch nothing
+
+"Unread" means not yet attached to any composition, not "arrived recently".
+A drop stays listed until it is used, however old. Reading consumes nothing.
 
 env: JAMAI_RECORDER_PORTS (default "8768 8778"), EPISODE_STATE_DIR
 U
@@ -82,32 +87,14 @@ ok "atelier « $ATELIER » servi par le port $PORT — vérifié, pas supposé"
 ok "canal prêt (portail, clé Groq, ffmpeg)"
 
 REC="$HOME/Recordings-$ATELIER"
-MARK="$STATE_DIR/jamai-morning.last"
 mkdir -p "$STATE_DIR" "$REC"
 
-# ── 3. What Jerry dropped since last time ───────────────────────────────────
-# The voice channel filters MIDI out of `pending`, so his percussion tracks never
-# appear there. Read the folder directly and count both.
-#
-# And subtract our own voice: every clip this channel speaks or renders is written
-# to the ledger. Without this the launcher reports yesterday's own output back as
-# "what Jerry just dropped" — measured on the first run, ten files, all ours.
-LEDGER="$STATE_DIR/spoken-$ATELIER.txt"
-not_ours() {   # the ledger holds bare filenames; the input holds full paths
-  if [ -s "$LEDGER" ]; then grep -vF -f <(grep -v '^[[:space:]]*$' "$LEDGER") || true
-  else cat; fi
-}
-if [ -f "$MARK" ]; then
-  NEW="$(find "$REC" -maxdepth 1 -type f -newer "$MARK" \
-        \( -iname '*.m4a' -o -iname '*.mp3' -o -iname '*.wav' -o -iname '*.opus' \
-           -o -iname '*.aac' -o -iname '*.amr' -o -iname '*.mid' -o -iname '*.midi' \) \
-        -printf '%T@ %p\n' 2>/dev/null | sort -n | cut -d' ' -f2- | not_ours)"
-else
-  NEW="$(find "$REC" -maxdepth 1 -type f -mtime -1 \
-        \( -iname '*.mid' -o -iname '*.midi' -o -iname '*.m4a' \) \
-        -printf '%T@ %p\n' 2>/dev/null | sort -n | cut -d' ' -f2- | not_ours)"
-  warn "premier lancement — je montre les dépôts des dernières 24 h"
-fi
+# ── 3. What is still unread ─────────────────────────────────────────────────
+# Not "what arrived since midnight", and not "what arrived since the last
+# launch". See scripts/jamai-unread.py for why a timestamp marker asks the
+# wrong question, and what replaces it.
+NEW="$(python3 "$(dirname "$0")/jamai-unread.py" \
+        "$REC" "$STATE_DIR/spoken-$ATELIER.txt" "$PIXEL_RECORDER_URL" "$SINCE")"
 
 N_MIDI=$(printf '%s\n' "$NEW" | grep -ciE '\.midi?$' || true)
 N_AUD=$(printf '%s\n' "$NEW" | grep -cvE '\.midi?$|^$' || true)
@@ -140,10 +127,10 @@ mesurés et les règles. Lis-la avant d'agir, ainsi que
 - preflight passé : portail, clé Groq non guillemetée, ffmpeg
 - prochain numéro libre : **$SLUG_HINT**
 
-CE QUE JERRY VIENT DE DÉPOSER :
+EN ATTENTE — déposé par Jerry, pas encore rattaché à une composition :
 EOF
   if [ -z "$NEW" ]; then
-    echo "  (rien de neuf depuis la dernière session)"
+    echo "  (rien en attente : tout ce qu'il a déposé est déjà rattaché)"
   else
     printf '%s\n' "$NEW" | while read -r f; do
       [ -n "$f" ] || continue
@@ -177,8 +164,8 @@ EOF
 # The marker moves only when a real session is about to open and actually see
 # these files. It is set just before exec, below.
 printf '\n' >&2
-if [ -z "$NEW" ]; then warn "rien de neuf déposé dans $REC"
-else ok "$N_MIDI MIDI et $N_AUD audio déposés depuis la dernière session"; fi
+if [ -z "$NEW" ]; then warn "rien en attente dans $REC"
+else ok "$N_MIDI MIDI et $N_AUD audio en attente"; fi
 ok "prochain numéro : $SLUG_HINT"
 ok "brief écrit dans $BRIEF"
 
@@ -189,6 +176,5 @@ if [ "$DRY" -eq 1 ]; then
 fi
 
 command -v claude >/dev/null || die "la commande \`claude\` est introuvable dans le PATH"
-touch "$MARK"          # a real session is opening and will see these files
 say "ouverture de la session…"
 exec claude "$(cat "$BRIEF")"

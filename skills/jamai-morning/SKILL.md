@@ -21,8 +21,24 @@ did not play, and how not to lose it.
 
 Jerry runs this; it launches the session with a brief already written. It finds
 which recorder serves the `jamai` atelier (two run side by side — getting it wrong
-writes the music into the episodes atelier silently), runs preflight, lists what he
-dropped since last time **minus our own clips**, and claims the next opus number.
+writes the music into the episodes atelier silently), runs preflight, lists what is
+**still unread**, and claims the next opus number.
+
+**Unread means "not yet attached to any composition"** — not "arrived recently",
+and not "arrived since the last launch". Jerry can drop something at ten in the
+evening and ask for it two days later; a timestamp marker would have buried it the
+moment any session opened in between. So the launcher asks disk the real question:
+a file that has been worked on is attached somewhere.
+
+Two consequences: **nothing expires** — a drop stays listed until it is used,
+however old — and **reading consumes nothing**, so the command can be run any
+number of times and always says the same thing. `--since 2026-08-01` narrows the
+window when the backlog gets long.
+
+The corollary is a duty: **attach his source files to the composition they
+produced**, not just your own renders. If you transcribe three MIDI into a piece
+and never attach them, they stay listed as unread forever and the piece has no
+record of what it came from.
 
 If you were launched by it, the brief already carries verified state. Do not
 re-verify it. Start by reading his files.
