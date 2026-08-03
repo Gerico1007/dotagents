@@ -91,15 +91,16 @@ Reading SVG source tells you nothing about broken beams, collapsed staves, a cle
 flipping mid-bar or sixteen stray rests. The picture tells you all four in one
 glance. **Every engraving defect ever found here was found this way.**
 
-## Four silent traps in the ABC toolchain
+## Five silent traps in the ABC toolchain
 
-None raises an error. All four produce a valid file that is wrong.
+None raises an error. All five produce a valid file that is wrong.
 
 | trap | what happens | guard |
 |---|---|---|
 | beaming | decided by **spaces in the source**; dynamics force a space before every note and unbeam the piece | write `CG, CG,` not `C G, C G,` |
 | `%%score` | parentheses mean *same staff*; the brace also swaps voice names in pairs (Gerico1007/jamai-melody#2) | `%%score [1 \| 2 \| 3 \| 4]` |
 | chord symbols | abc2midi *plays* them: 96 notes instead of 64 | `%%MIDI gchordoff` |
+| `gchordoff` itself | it is **per voice**. In the header it only covers the first one, so moving chord symbols to another voice silently restores the accompaniment — 105 notes instead of 70, with thirds appearing on chords that deliberately had none | repeat it inside the voice that carries the symbols |
 | chords | unequal durations inside `[...]` are refused, the short note vanishes | give it its own voice |
 
 Plus: FluidSynth reverberates by default and the publisher passes no `-R 0` — cut
