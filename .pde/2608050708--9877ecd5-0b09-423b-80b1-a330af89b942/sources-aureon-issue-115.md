@@ -141,3 +141,42 @@ deux entrées portaient le même numéro. La table des unités devient homogène
 | jamai | opus | `op-NNN-slug` |
 | episodes | épisode | `ep-NNN-slug` |
 | **aureon** | **journal** | **`jr-NNN.{template}.{user}.{author}.v{ts}`** |
+
+---
+
+## STRUCTURE FINALE — décidée par Jerry, 2026-08-05
+
+Dans cet atelier, **c'est toujours Aureon qui écrit** : le segment `{author}`
+d'Edge Hub n'a plus d'objet. Le propriétaire du journal est Jerry, donc
+`{user}` non plus. Restent trois choses, et elles sont celles que Jerry a
+nommées : **le type de journal, le sujet abordé, la date à la seconde.**
+
+```
+jr-NNN.{type}.{sujet}.v{yymmddhhmmss}
+```
+
+```
+jr-001.MainJ.etincelle-partagee.v260805114331
+jr-002.WhiteF.gratitude-au-travail.v260805143012
+jr-003.AvenL.souffle-avant-la-marche.v260805220544
+jr-004.Musc.fredon-en-fa-mineur.v260806081127
+```
+
+| segment | contenu | source |
+|---|---|---|
+| `jr-NNN` | numéro séquentiel, allocateur anti-collision comme `op-` et `ep-` | notre convention |
+| `{type}` | `MainJ` · `WhiteF` · `AvenL` · `Musc` | Edge Hub, conservé |
+| `{sujet}` | le sujet abordé, en minuscules-tirets sans accent | remplace `{user}` et `{author}` |
+| `v{yymmddhhmmss}` | horodatage UTC **à la seconde** — 12 chiffres | Edge Hub, résolu à la seconde |
+
+**La seconde est retenue**, pas la minute : une veille automatique peut produire
+deux versions dans la même minute, un humain non.
+
+**Ce que `v` sépare** : deux versions de la même entrée gardent la même tête
+`jr-NNN.{type}.{sujet}` et changent de `v` ; une entrée différente prend un
+numéro neuf. La règle « ne jamais écraser une source sans garder la sortante »
+est donc portée par le nom lui-même.
+
+**Point à câbler** : `{sujet}` doit être normalisé — minuscules, tirets, sans
+accent ni ponctuation — pour rester un nom de fichier sûr. Même normalisation
+que les slugs `op-NNN-slug` existants.
