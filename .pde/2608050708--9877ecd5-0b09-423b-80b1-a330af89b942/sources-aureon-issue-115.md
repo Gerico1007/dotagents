@@ -156,16 +156,16 @@ jr-NNN.{type}.{sujet}.v{yymmddhhmmss}
 ```
 
 ```
-jr-001.MainJ.etincelle-partagee.v260805114331
-jr-002.WhiteF.gratitude-au-travail.v260805143012
-jr-003.AvenL.souffle-avant-la-marche.v260805220544
-jr-004.Musc.fredon-en-fa-mineur.v260806081127
+jr-001.mainj.etincelle-partagee.v260805114331
+jr-002.whitef.gratitude-au-travail.v260805143012
+jr-003.avenl.souffle-avant-la-marche.v260805220544
+jr-004.musc.fredon-en-fa-mineur.v260806081127
 ```
 
 | segment | contenu | source |
 |---|---|---|
 | `jr-NNN` | numéro séquentiel, allocateur anti-collision comme `op-` et `ep-` | notre convention |
-| `{type}` | `MainJ` · `WhiteF` · `AvenL` · `Musc` | Edge Hub, conservé |
+| `{type}` | `mainj` · `whitef` · `avenl` · `musc` | Edge Hub, passé en minuscules |
 | `{sujet}` | le sujet abordé, en minuscules-tirets sans accent | remplace `{user}` et `{author}` |
 | `v{yymmddhhmmss}` | horodatage UTC **à la seconde** — 12 chiffres | Edge Hub, résolu à la seconde |
 
@@ -180,3 +180,26 @@ est donc portée par le nom lui-même.
 **Point à câbler** : `{sujet}` doit être normalisé — minuscules, tirets, sans
 accent ni ponctuation — pour rester un nom de fichier sûr. Même normalisation
 que les slugs `op-NNN-slug` existants.
+
+### Aucune majuscule — règle posée par Jerry, 2026-08-05
+
+**L'identifiant entier est en minuscules**, pas seulement le sujet. Les quatre
+types passent donc de `MainJ` / `WhiteF` / `AvenL` / `Musc` à **`mainj`** /
+**`whitef`** / **`avenl`** / **`musc`**.
+
+```
+jr-001.mainj.etincelle-partagee.v260805114230
+jr-002.whitef.gratitude-au-travail.v260805143012
+jr-003.avenl.souffle-avant-la-marche.v260805220544
+jr-004.musc.fredon-en-fa-mineur.v260806081127
+```
+
+La normalisation s'applique à **toute la chaîne** : minuscules, tirets, sans
+accent ni ponctuation. Un identifiant est un nom de fichier ; il doit survivre
+à un système de fichiers insensible à la casse sans que deux entrées se
+confondent.
+
+*Observation, pas objection* : `whitef` et `avenl` étaient des abréviations
+lisibles en casse mixte et le sont moins en bas de casse. `white` et `aven`
+seraient plus lisibles. Décision de Jerry ; en attendant, la règle appliquée
+est la sienne, à la lettre.
