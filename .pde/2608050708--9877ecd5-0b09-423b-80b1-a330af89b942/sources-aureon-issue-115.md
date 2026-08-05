@@ -107,3 +107,37 @@ Deux conventions coexistent donc dans le système. **C'est un choix à faire, pa
 un défaut à corriger** : ou chaque atelier garde sa forme native, ou on unifie.
 Imposer `jr-NNN` à aureon effacerait un dispositif qui fonctionne et qui règle
 un problème que nos préfixes ont encore. **La décision appartient à Jerry.**
+
+---
+
+## DÉCISION DE JERRY — 2026-08-05
+
+`EN-Entries:` est **l'ancien système Edge Hub**. On garde sa **structure**, on
+remplace sa tête par un préfixe numéroté, cohérent avec `op-` et `ep-` :
+
+```
+jr-NNN.{template}.{user}.{author}.v{yymmddhhmmss}
+```
+
+Exemples dans la nouvelle forme :
+
+```
+jr-001.MainJ.Jericho.aur.v2608050912
+jr-002.WhiteF.Jericho.mix.v2608051430
+jr-003.AvenL.Lian.rav.v2608052205
+```
+
+Segments inchangés : `{template}` = `MainJ` / `WhiteF` / `AvenL` / `Musc` ·
+`{user}` = propriétaire du journal · `{author}` = `usr` / `aur` / `rav` / `mix` ·
+`v{yymmddhhmmss}` = horodatage UTC à la seconde.
+
+**Ce que la décision entraîne** : le numéro revient, donc **l'allocateur et la
+règle anti-collision redeviennent nécessaires** — le même mécanisme que pour
+`op-NNN` et `ep-NNN`. L'horodatage reste dans la queue et sert de départage si
+deux entrées portaient le même numéro. La table des unités devient homogène :
+
+| atelier | unité | identifiant |
+|---|---|---|
+| jamai | opus | `op-NNN-slug` |
+| episodes | épisode | `ep-NNN-slug` |
+| **aureon** | **journal** | **`jr-NNN.{template}.{user}.{author}.v{ts}`** |
