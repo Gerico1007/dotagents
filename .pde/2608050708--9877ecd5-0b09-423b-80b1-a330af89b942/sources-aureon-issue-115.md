@@ -156,16 +156,16 @@ jr-NNN.{type}.{sujet}.v{yymmddhhmmss}
 ```
 
 ```
-jr-001.mainj.etincelle-partagee.v260805114331
-jr-002.whitef.gratitude-au-travail.v260805143012
-jr-003.avenl.souffle-avant-la-marche.v260805220544
+jr-001.main.etincelle-partagee.v260805114331
+jr-002.white.gratitude-au-travail.v260805143012
+jr-003.aven.souffle-avant-la-marche.v260805220544
 jr-004.musc.fredon-en-fa-mineur.v260806081127
 ```
 
 | segment | contenu | source |
 |---|---|---|
 | `jr-NNN` | numéro séquentiel, allocateur anti-collision comme `op-` et `ep-` | notre convention |
-| `{type}` | `mainj` · `whitef` · `avenl` · `musc` | Edge Hub, passé en minuscules |
+| `{type}` | `main` · `white` · `aven` · `musc` | Edge Hub, en minuscules et désabrégé |
 | `{sujet}` | le sujet abordé, en minuscules-tirets sans accent | remplace `{user}` et `{author}` |
 | `v{yymmddhhmmss}` | horodatage UTC **à la seconde** — 12 chiffres | Edge Hub, résolu à la seconde |
 
@@ -188,9 +188,9 @@ types passent donc de `MainJ` / `WhiteF` / `AvenL` / `Musc` à **`mainj`** /
 **`whitef`** / **`avenl`** / **`musc`**.
 
 ```
-jr-001.mainj.etincelle-partagee.v260805114230
-jr-002.whitef.gratitude-au-travail.v260805143012
-jr-003.avenl.souffle-avant-la-marche.v260805220544
+jr-001.main.etincelle-partagee.v260805114230
+jr-002.white.gratitude-au-travail.v260805143012
+jr-003.aven.souffle-avant-la-marche.v260805220544
 jr-004.musc.fredon-en-fa-mineur.v260806081127
 ```
 
@@ -203,3 +203,26 @@ confondent.
 lisibles en casse mixte et le sont moins en bas de casse. `white` et `aven`
 seraient plus lisibles. Décision de Jerry ; en attendant, la règle appliquée
 est la sienne, à la lettre.
+
+### Les types désabrégés — Jerry, 2026-08-05
+
+`mainj` → **`main`** · `whitef` → **`white`** · `avenl` → **`aven`**.
+Les abréviations d'Edge Hub tenaient à la casse mixte ; en bas de casse elles
+ne servaient plus à rien.
+
+```
+jr-001.main.etincelle-partagee.v260805114230
+jr-002.white.gratitude-au-travail.v260805143012
+jr-003.aven.souffle-avant-la-marche.v260805220544
+jr-004.musc.fredon-en-fa-mineur.v260806081127
+```
+
+| type | journal | issue d'origine |
+|---|---|---|
+| `main` | Main Journal — Jericho's Reflections | orpheus#587 |
+| `white` | Spiritual Journal — White Feather | orpheus#704 |
+| `aven` | Aven's Loops — Emotional Anchors | orpheus#784 |
+| `musc` | Gmusic Lyrics — Spiritual Composition | orpheus#717 |
+
+**`musc` reste le seul abrégé** — non nommé par Jerry dans cette passe. `music`
+compléterait la série ; en attendant, `musc` tient.
