@@ -1,5 +1,14 @@
 # 📺 Brief — diffuser l'atelier JAMAI sur la télé
 
+> **✅ Cette voie a abouti — 2026-08-15.** La capacité existe : la skill
+> `gmusic-routine` (déclencheur) et le dépôt privé `gmusic1007/gmusic-routine`
+> (les moments, les appareils, la géométrie de l'écran). Les outils
+> `jamai-cast-visual` et `jamai-say-kitchen` vivent dans `gmusic1007/jamai-core`
+> et refusent de partir sans qu'on leur nomme un appareil.
+>
+> **Ne pas rebâtir ce qui est ici.** Ce brief est gardé pour ce qu'aucun code
+> ne dit : les mots de Jerry, la façon dont il travaille, et les pièges payés.
+
 Tu ouvres une voie à côté de l'atelier JAMAI de Jerry ⚡ (pane `w17:p1`,
 workspace `w17` « atelier JAMAI — suite »). **Jerry va te parler directement**
 pour construire avec toi la skill de diffusion. Réponds en français ; il passe
@@ -32,21 +41,15 @@ lié en `~/.local/bin/catt`.
 **Les récepteurs**, sortie réelle de `catt scan` :
 
 ```
-192.168.4.23 - Bedroom speaker - Google Nest Mini
-192.168.4.23 - Kitchen Tv      - Google Cast Group
-192.168.4.26 - Television      - Chromecast          ← l'ÉCRAN
-192.168.4.23 - bed             - Google Cast Group
-192.168.4.26 - everywhere      - Google Cast Group
-192.168.4.25 - kitchen speaker - Google Home
-```
+Les appareils de la maison ne sont **pas listés ici** : un brief nomme la
+capacité, jamais l'adresse. Pour les voir : `catt scan`. Pour s'en servir :
+`routine cuisine voir <page.html>` et `routine cuisine dire "…"`, dont les
+réglages vivent dans le dépôt privé `gmusic1007/gmusic-routine`.
 
-Eury est sur ce réseau en 192.168.4.59 et 192.168.4.33.
-
-**Ce qui a joué pour de vrai**, sur `Television` :
+**Ce qui a joué pour de vrai**, sur l'écran du moment :
 
 ```bash
-nohup catt -d "Television" cast ~/compositions-jamai/op-011-pic-bois/op-011-pic-bois-partition.mp4 &
-catt -d "Television" status
+routine cuisine voir op-011-pic-bois-partition.mp4   # l'appareil vient du moment
 #   Title: op-011-pic-bois-partition
 #   Time: 00:00:35 / 00:00:48 (74%)
 #   State: PLAYING

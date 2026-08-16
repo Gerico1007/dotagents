@@ -32,8 +32,8 @@ Tout ce bloc a été exécuté par la voie CAST (`w17:p2`). Rien n'est supposé.
 **Ne le re-mesure pas, tu perdrais ton temps.**
 
 **Le sortant est vivant.** Deux commandes, chacune imprime une preuve :
-- `jamai-cast-visual <fichier.html>` → visuel sur `Television`
-- `jamai-say-kitchen "…"` → voix française sur `kitchen speaker`
+- `routine <moment> voir <fichier.html>` → l'image, sur l'écran de ce moment
+- `routine <moment> dire "…"` → la voix, sur l'enceinte de ce moment
 - feuille de style unique : `~/.local/share/jamai-cast/web/_socle.css`
 
 **L'écran de la cuisine**, mesuré par l'appareil lui-même (une page castée a
@@ -44,21 +44,15 @@ lu un calibrage depuis la cuisine et tranché : **93 % = 1190 × 670** (retrait
 
 **Les récepteurs** (`catt scan`, sortie réelle) :
 ```
-192.168.4.23  Bedroom speaker   Google Nest Mini
-192.168.4.23  Kitchen Tv        Google Cast Group
-192.168.4.26  Television        Chromecast          ← l'écran (cuisine)
-192.168.4.23  bed               Google Cast Group
-192.168.4.26  everywhere        Google Cast Group
-192.168.4.25  kitchen speaker   Google Home         ← l'enceinte (cuisine)
-```
-Eury est sur ce réseau ; la route vers le Chromecast sort en `192.168.4.33`.
+Les appareils de la maison ne sont **pas listés ici** : un brief nomme la
+capacité, jamais l'adresse. `catt scan` les montre ; `routine` les fournit.
 
 **Latences de démarrage** : fichier local → enceinte ~1,6 s ; URL publique →
-enceinte ~2,1 s ; mp4 local → Television ~3,2 s. La découverte réseau n'est pas
+enceinte ~2,1 s ; mp4 local → l'écran ~3,2 s. La découverte réseau n'est pas
 le coût (0,7-0,8 s).
 
 **Trois pièges déjà payés :**
-- `Television` REFUSE l'audio seul (URL mp3 → « No suitable format was found » ;
+- l'écran REFUSE l'audio seul (URL mp3 → « No suitable format was found » ;
   mp3 local → catt sert mais l'appareil n'annonce jamais PLAYING). Le mp4
   h264/aac passe. Donc : télé = image, enceintes = son.
 - `catt cast_site` se bloque si une app tourne déjà → toujours `catt stop` avant.
