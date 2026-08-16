@@ -78,4 +78,4 @@ déborde, couper le contenu, jamais réduire la police.
 Quand Jerry est dans un moment, la réponse écrite n'est plus le livrable : c'est
 la trace. Le livrable est ce qu'il a **vu** et **entendu**. Composer d'abord ce
 qu'on va dire, puis la page qui le soutient — pas l'inverse. Et en partant,
-`sortie` : sans elle, on continue de parler à une pièce vide.
+`routine <moment> exit` : sans elle, on continue de parler à une pièce vide.
