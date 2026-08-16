@@ -12,8 +12,8 @@ William, et rapportées dans la conversation au moment de la mesure.
 | herdr pane | `w15:p1` · tab `w15:t1` · terminal `term_65893aea9491546` |
 | session Claude | `9f8a16f3-7151-4d35-a928-53f703ba9faa` |
 | transcript | `~/.claude/projects/-home-gmusic/9f8a16f3-7151-4d35-a928-53f703ba9faa/` |
-| composition | `https://ilex.ferret-harmonic.ts.net:8768/compositions/ava001` (workspace `aureon`) |
-| dossier | `~/compositions-aureon/ava001` sur `ilex.ferret-harmonic.ts.net:8022` |
+| composition | `https://$ILEX_HOST:8768/compositions/ava001` (workspace `aureon`) |
+| dossier | `~/compositions-aureon/ava001` sur `$ILEX_HOST:8022` |
 
 ## La matière de départ
 

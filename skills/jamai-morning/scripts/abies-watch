@@ -13,8 +13,18 @@ set -uo pipefail
 
 EP="$HOME/.agents/skills/episode-voice-channel/scripts/episode"
 WS=abies
-REMOTE=abies.ferret-harmonic.ts.net
-SSH_PORT=8022
+# Le nom du nœud appartient au réseau de quelqu'un, pas à ce dépôt public.
+# Il est lu dans ~/.config/gmusic-routine/nodes.env (ou $GMUSIC_NODES), qui
+# n'est pas versionné ici — voir gmusic1007/gmusic-routine.
+NODES="${GMUSIC_NODES:-$HOME/.config/gmusic-routine/nodes.env}"
+[ -r "$NODES" ] && . "$NODES"
+REMOTE="${ABIES_HOST:-}"
+SSH_PORT="${ABIES_SSH_PORT:-8022}"
+if [ -z "$REMOTE" ]; then
+  echo "✗ aucun nœud nommé. Attendu ABIES_HOST dans $NODES," >&2
+  echo "  ou dans l'environnement. Ce dépôt ne connaît aucun réseau." >&2
+  exit 2
+fi
 
 # ÉCART 1 — repère à cette veille SEULE. jamai-watch partage
 # « watch-standalone » ; les fichiers sont nommés par atelier (watch-abies.sha)

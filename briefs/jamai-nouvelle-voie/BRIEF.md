@@ -103,7 +103,7 @@ python3 et d'une clé Groq. **Ne le promets pas avant de l'avoir vérifié là-b
 Les nœuds Android sont en Termux, **port 8022, pas 22** :
 
 ```bash
-ssh -p 8022 larix.ferret-harmonic.ts.net "<commande>"
+ssh -p 8022 "$LARIX_HOST" "<commande>"   # nom du nœud : ~/.config/gmusic-routine/nodes.env
 ```
 
 Même forme pour `ilex`, `tilia`, `abies`. Eury est en port 22.
