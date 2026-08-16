@@ -9,11 +9,12 @@ Jerry annonce un moment. Ce moment dit **quel appareil** répond, **sur quel ton
 et **quand se taire**. Une commande unique tient la charnière :
 
 ```bash
-routine                            # les moments déclarés
-routine <moment> posture           # à LIRE avant de composer la réponse
-routine <moment> dire "…"          # la voix, sur l'appareil de ce moment
-routine <moment> voir page.html    # l'image, sur l'écran de ce moment
-routine <moment> sortie            # en partant
+routine                          # les moments déclarés
+routine <moment> posture         # à LIRE avant de composer la réponse
+routine <moment> say "…"         # la voix, sur l'enceinte de ce moment
+routine <moment> show page.html  # l'image, sur l'écran de ce moment
+routine <moment> exit            # en partant
+routine new                      # en écrire un — il scanne avant de demander
 ```
 
 ## Les trois couches — ne pas les mélanger
@@ -24,11 +25,13 @@ routine <moment> sortie            # en partant
 | le moment | `gmusic1007/gmusic-routine` | quel appareil, quelle voix, quel ton |
 | la phrase | *cette skill* | ce que Jerry dit pour déclencher |
 
-**Ne jamais appeler `jamai-say-kitchen` ou `jamai-cast-visual` directement.**
+**Ne jamais appeler `jamai-say` ou `jamai-cast` directement.**
 Elles refusent désormais de partir sans qu'on leur nomme un appareil — et ce
 nom appartient au moment, pas à toi. Passe par `routine`.
 
-Si `routine` est introuvable : `~/salix/repos/gmusic-routine/install.sh`.
+`routine` vient de `jamai-core` (couture `moments/`) ; les moments eux-mêmes
+viennent de `gmusic-routine`. Si l'un manque, relancer l'`install.sh` du dépôt
+concerné.
 
 ## Lire la posture avant de répondre
 
@@ -36,7 +39,7 @@ Si `routine` est introuvable : `~/salix/repos/gmusic-routine/install.sh`.
 machine. Elle décide **du ton et de la longueur**, jamais du canal. Lis-la avant
 de composer, pas après.
 
-Pour `cuisine` elle dit, en substance : la voix porte le sens, l'ordre des
+Pour `kitchen` elle dit, en substance : la voix porte le sens, l'ordre des
 choses et ce qu'il faut décider ; l'écran porte les chiffres et les noms qu'on
 ne retient pas à l'oreille. **Jamais lire un tableau à voix haute. Jamais mettre
 un raisonnement à l'écran. Toujours les deux ensemble.**
@@ -67,8 +70,8 @@ déborde, couper le contenu, jamais réduire la police.
 | piège | ce qu'il faut faire |
 |---|---|
 | La télé **refuse l'audio seul** | mp4 h264/aac pour l'image animée ; le son va sur l'enceinte |
-| `catt cast_site` se bloque si une app tourne déjà | `catt stop` avant — `jamai-cast-visual` le fait |
-| `episode say` **ne parle pas à voix haute** | il importe un m4a dans le portail ; pour sonner dans une pièce, c'est `routine <moment> dire` |
+| `catt cast_site` se bloque si une app tourne déjà | `catt stop` avant — `jamai-cast` le fait |
+| `episode say` **ne parle pas à voix haute** | il importe un m4a dans le portail ; pour sonner dans une pièce, c'est `routine <moment> say` |
 
 ## Ce que ça change dans la conversation
 
