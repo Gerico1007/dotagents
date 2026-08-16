@@ -188,8 +188,12 @@ reste dans git.
 | la session relue, publiquement | <https://gmusicassembly.com/session-ava001/> |
 | la matière | `~/compositions-aureon/ava001` sur `ssh ilex` |
 
+`$ILEX_HOST` se lit dans `~/.config/gmusic-routine/nodes.env` (fourni par
+`gmusic1007/gmusic-routine`, `house/nodes.env`) ; `ilex` seul est l'alias
+défini dans `~/.ssh/config`.
+
 ⚠️ **Le portail d'`ava001` ne se joint que depuis `ilex`.** Depuis eury,
-`https://ilex.tail3b11eb.ts.net:8768` rend **200 — et c'est eury qui répond de
+`https://$ILEX_HOST:8768` rend **200 — et c'est eury qui répond de
 lui-même** : `/etc/hosts` envoie `ilex` sur la voie de bouclage `127.0.101.1`,
 mais seul le port **8022** y est relayé ; 8768 retombe sur le propre écouteur
 d'eury (`0.0.0.0:8768`, workspace `jamai`). Un 200 ne prouve pas l'hôte. Mesuré

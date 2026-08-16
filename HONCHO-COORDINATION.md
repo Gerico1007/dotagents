@@ -11,20 +11,22 @@ Relevé et câblé le **2026-08-14** depuis le compte `gmusic` sur eury.
 | `mia-honcho-mcp-v3` | up 2 h | le serveur MCP, port interne 8081 |
 | `mia-honcho-database-1` | up 2 semaines (healthy) | pgvector/pg15 |
 | `mia-honcho-redis-1` | up 2 semaines (healthy) | la file du deriver |
-| `mia-honcho-tailscale-1` | up 26 h | expose `honcho.tail3b11eb.ts.net` |
+| `mia-honcho-tailscale-1` | up 26 h | expose le sidecar sur `$HONCHO_MCP_URL` |
 
-Endpoint vérifié : `POST https://honcho.tail3b11eb.ts.net/mcp` → **200** avec le bearer.
+Endpoint vérifié : `POST $HONCHO_MCP_URL` → **200** avec le bearer.
+`HONCHO_MCP_URL` est la variable que lit `skills/relational-workspace-honcho/scripts/honcho-mcp.sh` ;
+sa valeur se prend dans l'environnement, pas dans ce dépôt.
 
 **Correction de ce que j'avais d'abord écrit ici.** J'avais annoncé que la même URL
 marcherait depuis Larix, Ilex, Tilia et Abies. Mesuré : **non**. Il y a deux tailnets.
 
-| tailnet | qui | voit `honcho.tail3b11eb.ts.net` ? |
+| tailnet | qui | voit le sidecar Honcho ? |
 |---|---|---|
-| `tail3b11eb` | le sidecar, en ligne sous ce nom exact ; le poste de William | **oui**, par MagicDNS |
-| `ferret-harmonic` | eury, Larix, Ilex, Tilia, Abies — la forêt | **non** |
+| celui du sidecar | le conteneur, en ligne sous son nom MagicDNS ; le poste de William | **oui**, par MagicDNS |
+| celui de la forêt | eury, Larix, Ilex, Tilia, Abies | **non** |
 
-Eury n'est pas sur `tail3b11eb` : il s'en sort par une ligne d'`/etc/hosts`
-(`127.0.100.6 honcho.tail3b11eb.ts.net`) vers son proxy local en 443. C'est un
+Eury n'est pas sur le tailnet du sidecar : il s'en sort par une ligne d'`/etc/hosts`
+qui pointe le nom MagicDNS du sidecar vers son proxy local en 443. C'est un
 raccourci de machine, pas une route de réseau. Les nœuds Termux n'ont pas cette
 ligne — pour eux, le nom ne résout pas du tout.
 
