@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # abies-watch — surveille l'atelier « abies » : un MIROIR local de ce que Jerry
-# dépose sur le téléphone abies (Termux, port 8022, tailnet ferret-harmonic).
+# dépose sur le téléphone abies (Termux, SSH sur un port non standard — voir
+# ABIES_SSH_PORT plus bas).
 #
 # Copié de jamai-watch le 2026-08-12. Ce n'est pas un simple renommage :
 # quatre écarts, chacun mesuré, sont notés « ÉCART » ci-dessous.

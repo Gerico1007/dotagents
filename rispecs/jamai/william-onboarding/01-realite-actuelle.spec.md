@@ -15,6 +15,10 @@ William, et rapportées dans la conversation au moment de la mesure.
 | composition | `https://$ILEX_HOST:8768/compositions/ava001` (workspace `aureon`) |
 | dossier | `~/compositions-aureon/ava001` sur `$ILEX_HOST:8022` |
 
+`$ILEX_HOST` n'est pas dans ce dépôt : il se lit dans
+`~/.config/gmusic-routine/nodes.env` (fourni par `gmusic1007/gmusic-routine`,
+`house/nodes.env`). Sans ce fichier, ces deux coordonnées ne résolvent pas.
+
 ## La matière de départ
 
 304 notes issues de 4 prises Songbird (suivi de hauteur sur la voix, monophonique,
