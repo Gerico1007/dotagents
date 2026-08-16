@@ -186,7 +186,7 @@ Defaults suit Eury. Override by environment when they do not:
 
 | variable | default |
 |---|---|
-| `PIXEL_RECORDER_URL` | `https://localhost:8768` |
+| `PIXEL_RECORDER_URL` | `https://localhost:8828` |
 | `ASSEMBLY_VOICE_DIR` | `~/salix/repos/assembly-voice` |
 | `EPISODE_STATE_DIR` | `~/.local/state/episode-voice` |
 
