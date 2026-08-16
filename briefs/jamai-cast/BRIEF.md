@@ -3,8 +3,9 @@
 > **✅ Cette voie a abouti — 2026-08-15.** La capacité existe : la skill
 > `gmusic-routine` (déclencheur) et le dépôt privé `gmusic1007/gmusic-routine`
 > (les moments, les appareils, la géométrie de l'écran). Les outils
-> `jamai-cast-visual` et `jamai-say-kitchen` vivent dans `gmusic1007/jamai-core`
-> et refusent de partir sans qu'on leur nomme un appareil.
+> `jamai-cast` et `jamai-say` vivent dans `gmusic1007/jamai-core` (couture
+> `broadcast/`) et refusent de partir sans qu'on leur nomme un appareil — ce nom
+> appartient au moment, donc on passe par `routine <moment> show|say`.
 >
 > **Ne pas rebâtir ce qui est ici.** Ce brief est gardé pour ce qu'aucun code
 > ne dit : les mots de Jerry, la façon dont il travaille, et les pièges payés.
@@ -19,7 +20,7 @@ pour construire avec toi la skill de diffusion. Réponds en français ; il passe
 ## 1. Ce qu'il a demandé, dans ses mots
 
 > « I want you to expose and play the musical concept that we create here on the
-> Chromecast. So you will try to put the video, cast it to the television. »
+> Chromecast. So you will try to put the video, cast it to the screen. »
 
 > « launch another agent just beside us here, and I will double up with him,
 > the skills that we would use later on »
@@ -38,18 +39,15 @@ Rien ici n'est supposé.
 **L'outil.** `catt` v0.13.1, installé dans un venv isolé `~/.local/venvs/catt`,
 lié en `~/.local/bin/catt`.
 
-**Les récepteurs**, sortie réelle de `catt scan` :
-
-```
-Les appareils de la maison ne sont **pas listés ici** : un brief nomme la
-capacité, jamais l'adresse. Pour les voir : `catt scan`. Pour s'en servir :
-`routine cuisine voir <page.html>` et `routine cuisine dire "…"`, dont les
-réglages vivent dans le dépôt privé `gmusic1007/gmusic-routine`.
+**Les récepteurs.** Les appareils de la maison ne sont **pas listés ici** : un
+brief nomme la capacité, jamais l'adresse. Pour les voir : `catt scan`. Pour
+s'en servir : `routine kitchen show <page.html>` et `routine kitchen say "…"`,
+dont les réglages vivent dans le dépôt privé `gmusic1007/gmusic-routine`.
 
 **Ce qui a joué pour de vrai**, sur l'écran du moment :
 
 ```bash
-routine cuisine voir op-011-pic-bois-partition.mp4   # l'appareil vient du moment
+routine kitchen show op-011-pic-bois-partition.mp4   # l'appareil vient du moment
 #   Title: op-011-pic-bois-partition
 #   Time: 00:00:35 / 00:00:48 (74%)
 #   State: PLAYING
@@ -62,8 +60,9 @@ a commencé à lire, la commande a rendu la main, et `status` ne montrait plus q
 le volume. Lance en arrière-plan, et **`status` avec un temps qui avance est la
 seule preuve** qu'il se passe quelque chose.
 
-C'est aussi en mémoire :
-`~/.claude/projects/-home-gmusic-compositions-jamai/memory/reference_chromecast_television.md`
+C'est aussi consigné dans la mémoire de l'atelier jamai — la fiche de référence
+sur la diffusion, sous
+`~/.claude/projects/-home-gmusic-compositions-jamai/memory/`.
 
 ---
 
@@ -90,8 +89,8 @@ doit rendre `jamai`.
 - **Rien n'est branché sur son flux de travail.** Aujourd'hui il faut une
   commande à la main par vidéo.
 - **La diffusion audio seule n'a pas été essayée.** Les enceintes et les groupes
-  de la liste ci-dessus sont inexplorés — un mp3 sur `everywhere` pendant qu'il
-  cuisine, par exemple, n'a jamais été tenté.
+  que `catt scan` révèle sont inexplorés — un mp3 envoyé par `routine kitchen
+  say` pendant qu'il a les mains prises, par exemple, n'a jamais été tenté.
 - **Aucune reprise après coupure.** Si le réseau tombe ou si le processus meurt,
   personne ne le remarque et rien ne relance.
 

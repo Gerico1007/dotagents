@@ -239,7 +239,7 @@ Une vidéo vide et un mixage strident sont partis en ligne faute de ça.
 | pane | qui |
 |---|---|
 | `w17:p1` | l'atelier JAMAI en cours — opus 010 et 011, le pic-bois, le crochet réparé |
-| `w17:p2` | **CAST** — diffusion sur la télé et les enceintes (`catt`, via `routine <moment> voir`) |
+| voie **CAST** | diffusion sur l'écran et les enceintes du moment (`catt`, via `routine <moment> show\|say`) — repère-la avec `herdr pane list` |
 | `wX:p2` | le prédécesseur, encore là |
 
 Si un fait de ce brief ne colle pas avec ce que tu observes, **crois ce que tu

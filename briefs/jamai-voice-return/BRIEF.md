@@ -28,24 +28,23 @@ boucle.** Aujourd'hui on peut lui parler et lui montrer ; rien ne revient.
 
 ## 2. Ce qui MARCHE, mesuré et exécuté aujourd'hui — 2026-08-11
 
-Tout ce bloc a été exécuté par la voie CAST (`w17:p2`). Rien n'est supposé.
+Tout ce bloc a été exécuté par la voie CAST. Rien n'est supposé.
 **Ne le re-mesure pas, tu perdrais ton temps.**
 
 **Le sortant est vivant.** Deux commandes, chacune imprime une preuve :
-- `routine <moment> voir <fichier.html>` → l'image, sur l'écran de ce moment
-- `routine <moment> dire "…"` → la voix, sur l'enceinte de ce moment
+- `routine <moment> show <fichier.html>` → l'image, sur l'écran de ce moment
+- `routine <moment> say "…"` → la voix, sur l'enceinte de ce moment
 - feuille de style unique : `~/.local/share/jamai-cast/web/_socle.css`
 
-**L'écran de la cuisine**, mesuré par l'appareil lui-même (une page castée a
-renvoyé ses propres dimensions) : **1280 × 720 CSS px**, dpr 1.5 → 1920 × 1080
-réels, moteur **Chromium 90 / CrKey 1.56**. La télé rogne les bords ; Jerry a
-lu un calibrage depuis la cuisine et tranché : **93 % = 1190 × 670** (retrait
+**L'écran du moment `kitchen`**, mesuré par l'appareil lui-même (une page castée
+a renvoyé ses propres dimensions) : **1280 × 720 CSS px**, dpr 1.5 → 1920 × 1080
+réels, moteur **Chromium 90 / CrKey 1.56**. L'appareil rogne les bords ; Jerry a
+lu un calibrage sur place et tranché : **93 % = 1190 × 670** (retrait
 3,5 %). Ce chiffre est GRAVÉ, ne le rediscute pas.
 
-**Les récepteurs** (`catt scan`, sortie réelle) :
-```
-Les appareils de la maison ne sont **pas listés ici** : un brief nomme la
-capacité, jamais l'adresse. `catt scan` les montre ; `routine` les fournit.
+**Les récepteurs.** Les appareils de la maison ne sont **pas listés ici** : un
+brief nomme la capacité, jamais l'adresse. `catt scan` les montre ; `routine`
+les fournit.
 
 **Latences de démarrage** : fichier local → enceinte ~1,6 s ; URL publique →
 enceinte ~2,1 s ; mp4 local → l'écran ~3,2 s. La découverte réseau n'est pas
@@ -54,14 +53,14 @@ le coût (0,7-0,8 s).
 **Trois pièges déjà payés :**
 - l'écran REFUSE l'audio seul (URL mp3 → « No suitable format was found » ;
   mp3 local → catt sert mais l'appareil n'annonce jamais PLAYING). Le mp4
-  h264/aac passe. Donc : télé = image, enceintes = son.
+  h264/aac passe. Donc : écran = image, enceintes = son.
 - `catt cast_site` se bloque si une app tourne déjà → toujours `catt stop` avant.
 - `episode say` NE PARLE PAS à voix haute : il importe un m4a dans le portail.
   Pour sonner dans une pièce il faut synthétiser le fichier AVANT, puis caster.
 
 **La synthèse vocale** : `edge-tts` existe (`/opt/anaconda3/bin/edge-tts`), et
 les voix `fr-CA-SylvieNeural / AntoineNeural / JeanNeural / ThierryNeural`
-existent — listé, pas deviné. C'est ce que `jamai-say-kitchen` utilise.
+existent — listé, pas deviné. C'est ce que `routine <moment> say` utilise.
 
 ---
 
@@ -116,8 +115,9 @@ bridge ».** Le plus court chemin n'est pas de fouiller : c'est de demander.
 1. **EAST avant WEST.** Regarde avant d'agir : `herdr pane list`, les repos
    nommés ci-dessus, les panes déjà ouverts. Ne lance aucun agent, ne construis
    rien, ne touche à aucun service qui tourne.
-2. **Identifie le « voice bridge »** — demande à la voie CAST (`w17:p2`,
-   label `CAST-jamai-television`) ou à l'atelier si tu bloques.
+2. **Identifie le « voice bridge »** — demande à la voie CAST ou à l'atelier si
+   tu bloques ; repère-les avec `herdr pane list` plutôt qu'en te fiant à un
+   identifiant de pane écrit ici, qui périme vite.
 3. **Cherche les options réelles** Google Home → parole → agent. Chacune avec
    son coût et ses conditions. Une option impossible nommée honnêtement vaut
    mieux que trois options plausibles non vérifiées.
@@ -126,9 +126,9 @@ bridge ».** Le plus court chemin n'est pas de fouiller : c'est de demander.
 5. **Livre-le comme il travaille** : il n'est pas devant l'écran. Une question
    posée dans un terminal est adressée à quelqu'un qui n'y est pas — elle est
    invisible. Tu peux l'atteindre :
-   - `jamai-cast-visual <fichier.html>` → un visuel sur la télé de la cuisine,
+   - `routine <moment> show <fichier.html>` → un visuel sur l'écran du moment,
      bâti dans **1190 × 670**, sans scroll (une Chromecast ne scrolle pas)
-   - `jamai-say-kitchen "…"` → ta voix dans la cuisine
+   - `routine <moment> say "…"` → ta voix sur l'enceinte du moment
    **Livre, puis dis ce que tu as livré.**
 6. **Il aime choisir.** Deux ou trois chemins présentés valent mieux qu'un seul
    déjà tranché à sa place.
@@ -155,7 +155,7 @@ bridge ».** Le plus court chemin n'est pas de fouiller : c'est de demander.
 
 | voie | où | ce qu'elle tient |
 |---|---|---|
-| CAST (moi) | `w17:p2` — `CAST-jamai-television` | `jamai-cast-visual`, `jamai-say-kitchen`, la géométrie de l'écran |
+| CAST (moi) | voie de diffusion — repère-la avec `herdr pane list` | `routine <moment> show\|say`, la géométrie de l'écran |
 | atelier JAMAI | session `compositions-jamai-3f`, tmux `jamai-suite` | les opus, la veille `jamai-watch`, le crochet `jamai-on-drop` |
 | toi | ta voie | le retour de la voix |
 

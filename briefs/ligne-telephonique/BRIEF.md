@@ -173,13 +173,14 @@ bouton, un micro, la parole transcrite injectée dans la fenêtre active d'Eury.
 Il travaille dans sa cuisine. **Une question posée dans un terminal est adressée à
 quelqu'un qui n'y est pas : elle est invisible.** Tu le rejoins ainsi :
 
-- `jamai-cast-visual <fichier.html>` → un visuel sur la télé de la cuisine.
+- `routine <moment> show <fichier.html>` → un visuel sur l'écran de ce moment.
   **Zone utile 1190 × 670, aucun scroll possible** (une Chromecast ne scrolle pas).
   Feuille de style unique et obligatoire :
   `~/.local/share/jamai-cast/web/_socle.css` — classes `.scene .sure .bandeau
   .titre .soustitre .coeur .fiches .fiche .pied`. Moteur **Chromium 90** : pas de
   `:has()`, pas de container queries, pas d'imbrication CSS.
-- `jamai-say-kitchen "…"` → ta voix dans la cuisine (`fr-CA-SylvieNeural`).
+- `routine <moment> say "…"` → ta voix sur l'enceinte de ce moment
+  (`fr-CA-SylvieNeural`).
   **Écris pour l'oreille** : pas de chemins, pas de JSON, pas de symboles. « huit
   cent dix-neuf » et non `819`.
 
@@ -210,7 +211,7 @@ seule preuve valable, « la commande a répondu » n'en est pas une.
 
 | voie | où | ce qu'elle tient |
 |---|---|---|
-| CAST | `w17:p2` | `jamai-cast-visual`, `jamai-say-kitchen`, la géométrie de l'écran |
+| CAST | voie de diffusion — `herdr pane list` | `routine <moment> show\|say`, la géométrie de l'écran |
 | VOIX-RETOUR | `w17:p3` | le module cuisine, le voice-bridge, tout le contexte de la journée |
 | ilan (Hermes) | `w17:p5` | Amazon, Gmail, les points de vente |
 | **toi** | ta propre espace | **la ligne téléphonique** |
