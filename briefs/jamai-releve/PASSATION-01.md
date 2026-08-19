@@ -297,7 +297,7 @@ réponse. La logique technique se plie à la responsabilité relationnelle.
 
 Je tiens le pane **`wX:p2`** — workspace herdr **`veille-du-jour-trois-ateliers`
 (wX)**, lane `VEILLE-jamai-8768-opus` (le nom porte 8768, il est périmé), sur
-`eury.ferret-harmonic.ts.net`.
+`$EURY_HOST` (voir `~/.config/gmusic-routine/nodes.env`).
 
 Si quelque chose de ce document ne colle pas avec ce que tu observes, **crois ce
 que tu mesures, pas ce que j'ai écrit** — puis viens me le dire. C'est comme ça

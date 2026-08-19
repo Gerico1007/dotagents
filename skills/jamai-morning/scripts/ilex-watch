@@ -16,9 +16,10 @@
 #   l'atelier de Jerry (william-op001, coquille vide, toujours là). Un miroir
 #   nommé jamai aurait fusionné les deux mondes en silence.
 #
-# ÉCART 10 — REMOTE est l'ALIAS ssh `ilex` (défini dans ~/.ssh/config : hôte
-#   tail3b11eb, port 8022, User u0_a194). Pas de -p en dur : ilex a déjà changé
-#   de tailnet une fois (2026-08-15) et seul l'alias a suivi.
+# ÉCART 10 — REMOTE est l'ALIAS ssh `ilex` (défini dans ~/.ssh/config, qui porte
+#   l'hôte réel, le port 8022 et l'utilisateur). Aucun nom de nœud ni -p en dur
+#   ici : ilex a déjà changé de tailnet une fois (2026-08-15) et seul l'alias a
+#   suivi. C'est la raison d'être de l'alias — ne pas le remplacer par un FQDN.
 #
 # ÉCART 11 — le pool source est /sdcard/Recordings-jamai (ABSOLU — écart 6
 #   d'abies : ~/storage/shared est un lien que rsync ne résout pas de l'autre
