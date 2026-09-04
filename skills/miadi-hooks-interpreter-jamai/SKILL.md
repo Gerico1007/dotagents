@@ -154,7 +154,7 @@ Spot-check fails → do not keep the dest. Delete it and rerun.
 | `02-scores/` | `*.abc` | only if the generator is proven deterministic |
 | `03-rendered/midi` | `*.mid` that are not device captures | yes — `abc2midi` |
 | `03-rendered/audio` | `*.wav` `*.mp3` rendered `*.m4a` | yes — fluidsynth + ffmpeg |
-| `03-rendered/video` | `*.mp4` | yes — jamai-defile / jamai-clip |
+| `03-rendered/video` | `*.mp4` | yes — jamai-scroll / jamai-clip |
 | `03-rendered/scores` | `*.png` `*.svg` | yes — abcm2ps + rsvg-convert |
 | `04-captures/` | timestamped device `*.m4a` / Songbird `*.mid`, named source recordings | **no** |
 | `06-analysis/` | `note-*.md` `say-*.txt` `*.log` leftover txt | working memory |
@@ -170,7 +170,7 @@ The four tools that always run after a generator writes ABC:
 1. `abc2midi`
 2. `abcm2ps` + `rsvg-convert`
 3. `fluidsynth` (cut reverb: `%%MIDI control 91 0` / `93 0`)
-4. `ffmpeg`, usually via `jamai-defile.py` / `jamai-clip` / `jamai-publish-melody`
+4. `ffmpeg`, usually via `jamai-scroll.py` / `jamai-clip` / `jamai-publish-melody`
 
 That is the chain GUILLAUME.md asked Jerry to list. It is also why
 `03-rendered/` is 99% of the bulk and why the interpreter cannot see it.

@@ -18,7 +18,7 @@ Trois choses que ce script encode :
 
  3. LE DÉFILEMENT EST LE MÊME QUE LES AUTRES VIDÉOS : par morceaux, mesure par
     mesure, avec la tête de lecture qui court jusqu'au bout. La détection des
-    barres et le panoramique viennent de jamai-defile.py.
+    barres et le panoramique viennent de jamai-scroll.py (ex jamai-defile.py).
 
   clip.py <fond> <partition.png> <audio> <sortie.mp4> <s/mesure> <nb_mesures> [bande_y] [assombri] [partition.svg]
 """

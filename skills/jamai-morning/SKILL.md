@@ -1,6 +1,6 @@
 ---
 name: jamai-morning
-description: Run a music session with Jerry in the jamai atelier — read the MIDI and audio he dropped in the Pixel Recorder, transcribe them to ABC, engrave, render, publish to his melody portal, and build the piece with him across turns. Use whenever the subject is Jerry's own compositions rather than his repositories: he says "j'ai déposé des mélodies", "regarde ce que j'ai joué", "transcris ça", "ajoute une mesure", "change l'accord", or launches `jamai-morning`. Not for episode/worktree/repository work — that lives in the episodes atelier.
+description: "Run a music session with Jerry in the jamai atelier — read the MIDI and audio he dropped in the Pixel Recorder, transcribe them to ABC, engrave, render, publish to his melody portal, and build the piece with him across turns. Use whenever the subject is Jerry's own compositions rather than his repositories: he says \"j'ai déposé des mélodies\", \"regarde ce que j'ai joué\", \"transcris ça\", \"ajoute une mesure\", \"change l'accord\", or launches `jamai-morning`. Not for episode/worktree/repository work — that lives in the episodes atelier."
 ---
 
 # JamAI morning session
@@ -146,16 +146,32 @@ a page that scrolls down makes him hunt for his place; the red bar hands it to
 him. Never ship a still image with audio again.
 
 ```bash
-jamai-defile.py score.png piece.mp3 out.mp4 <secondes_par_mesure>
+# put %%measurenb 1 in the ABC, then engrave one wide staff and pass the SVG:
+abcm2ps -g -B <N> -k 8192 -O score.svg score.abc
+rsvg-convert -w <wide> -b white score001.svg -o score.png
+jamai-scroll.py score.png piece.mp3 out.mp4 <sec_par_mesure|liste> <N> score001.svg
 episode video <op> --file out.mp4 --label "🎬 …"
 ```
 
-Two things inside it are not decoration. The score must be engraved on **one
-single staff** (`%%pagewidth` wide + `%%barsperstaff N`, plus `-B N`), and the
-pan must be **piecewise**: abcm2ps spaces bars by their content — measured 298
-to 608 px on the same line — so a linear pan drifts by a full bar by the middle.
-The tool finds the barlines in the image and maps one bar of music to one
-segment of pixels. Verify by extracting two frames and checking the playhead
+**The tool is `jamai-scroll.py`.** It was called `jamai-defile.py` until
+2026-08-15, when it moved to `jamai-core` under the new name; nothing on disk
+answers to the old one any more. Its neighbour `jamai-score-video.py` has the
+more obvious name and does the **opposite** — it holds each system still for the
+duration of its bars, by design. Reaching for that one is how 2026-08-20 shipped
+four videos Jerry refused: *« elles sont un bloc à la fois, une mesure à la
+fois »*. Never build a score video with hand-written ffmpeg either — both
+red-playhead tools output 1280x720, so any other geometry is a video that left
+the atelier's tooling.
+
+Three things inside it are not decoration. The score must be engraved on **one
+single staff** (`%%pagewidth` wide + `%%barsperstaff N`, plus `-B N` and
+`-k 8192` past ~40 bars). The pan must be **piecewise**: abcm2ps spaces bars by
+their content — measured 149 to 255 px on opus 014's 65-bar line, 298 to 608 on
+another — so a linear pan drifts visibly by the middle. And the bar positions
+must come from the **SVG**, not from pixels: pixel detection counts a six-note
+chord's stem as a barline, which on opus 014's strummed guitar found 31 bars
+where there were 4. The guard refused to build — the right reflex — and the SVG
+path is the recourse. Verify by extracting two frames and checking the playhead
 against the expected bar number.
 
 ```bash
