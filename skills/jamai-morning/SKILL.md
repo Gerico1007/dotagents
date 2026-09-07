@@ -102,6 +102,34 @@ comments: `abc2midi` staggers a chord's notes by ~0.021 beat each, so a
 four-note chord spans 0.065 and a narrow window silently drops its last note;
 and a note ending exactly on the beat belongs to the previous chord.
 
+## Measure the grid BEFORE writing the score
+
+```bash
+jamai-grille.py <take.m4a|.mid> [--tonalite …] [--abc out.abc] [--titre …]
+```
+
+Jerry's rule, 2026-09-07, after refusing three engravings in a row: *« la
+comparaison avec les bonnes grilles doit se faire AVANT d'écrire la partition »*.
+His own diagnosis of the third one: *« si un musicien recevait cette partition-là,
+est-ce qu'il se mettrait à rire de moi ? […] beaucoup de silence […] dur à lire »*.
+
+The tool does the six steps in one command: fine-FFT transcription with harmonic
+product, tuning deviation stated in cents, **three pulse hypotheses** (the median
+onset interval is usually half the real beat — that alone hid the winning grid on
+comp-0001), 36 scales ranked with the tonic's weight to separate identical key
+signatures, then the grid table on three axes — quantisation error, internal
+silence, and **how many distinct note values a reader must decode**. Six values is
+the score he said a musician would laugh at; three is the same music readable.
+It also computes the anacrusis that puts most attacks on a strong beat, which was
+his own suggestion.
+
+It **refuses to write** an ABC carrying a non-notatable value. Rests are never
+dotted. A tie joins only pieces of the same event. The key signature is practical,
+never theoretical — B flat minor, never A sharp minor.
+
+Its output is a proposal, not a verdict: it prints every candidate so he can
+contradict it, and says which it kept and why.
+
 ## Look at the score. Actually look at it.
 
 ```bash
