@@ -44,6 +44,8 @@ PACKAGES=(
   file
   imagemagick
   python3
+  python3-venv
+  python3-pip
   python3-numpy
   python3-scipy
 )
@@ -90,10 +92,20 @@ check_command file file
 check_command convert imagemagick
 check_command python3 python3
 
-if python3 -c 'import numpy, scipy' >/dev/null 2>&1; then
+# Treat compatibility warnings as failures. A mismatched /usr/local NumPy can
+# shadow apt's NumPy while apt's older SciPy still imports with only a warning;
+# that is not a supported analysis environment.
+if python3 -W error -c '
+import numpy, scipy
+from scipy.signal import find_peaks
+peaks, _ = find_peaks(numpy.array([0.0, 1.0, 0.0]))
+assert peaks.tolist() == [1]
+' >/dev/null 2>&1; then
   printf 'OK      %-16s %s\n' 'numpy+scipy' "$(python3 -c 'import numpy, scipy; print("numpy=" + numpy.__version__ + " scipy=" + scipy.__version__)')"
 else
-  printf 'MISSING %-16s apt packages: python3-numpy python3-scipy\n' 'numpy+scipy'
+  printf 'BROKEN  %-16s compatible NumPy/SciPy pair required\n' 'numpy+scipy'
+  printf '        Python must import both without warnings and execute scipy.signal.\n'
+  printf '        Remove a shadowing /usr/local NumPy, or put a compatible venv/Conda Python first in PATH.\n'
   missing=$((missing + 1))
 fi
 
