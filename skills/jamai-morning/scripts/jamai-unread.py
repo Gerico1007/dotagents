@@ -1,1 +1,1 @@
-/home/gmusic/salix/repos/jamai-core/workshop/jamai-unread.py
+/home/gmusic/salix/repos/gmusic-routine/workshop/jamai-unread.py
